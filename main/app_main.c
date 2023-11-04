@@ -20,22 +20,21 @@
 
 #define I2C_MASTER_SCL GPIO_NUM_2
 #define I2C_MASTER_SDA GPIO_NUM_1
-#define LCD1602_I2C_ADDRESS 0x7e
+#define LCD1602_I2C_ADDRESS 0x3f
 
 // LCD1602
-#define LCD_NUM_ROWS            2
-#define LCD_NUM_COLUMNS         32
-#define LCD_NUM_VISIBLE_COLUMNS 16
+// #define LCD_NUM_ROWS            2
+// #define LCD_NUM_COLUMNS         32
+// #define LCD_NUM_VISIBLE_COLUMNS 16
 
 // LCD2004
-// #define LCD_NUM_ROWS               4
-// #define LCD_NUM_COLUMNS            80
-// #define LCD_NUM_VISIBLE_COLUMNS    20
+#define LCD_NUM_ROWS               4
+#define LCD_NUM_COLUMNS            80
+#define LCD_NUM_VISIBLE_COLUMNS    20
 
 // Undefine USE_STDIN if no stdin is available (e.g. no USB UART) - a fixed delay will occur instead of a wait for a
 // keypress.
-#define USE_STDIN 1
-// #undef USE_STDIN
+//#define USE_STDIN 1
 
 #define I2C_MASTER_NUM        I2C_NUM_0
 #define I2C_MASTER_TX_BUF_LEN 0  // disabled
@@ -62,7 +61,7 @@ static void i2c_master_init(void) {
 
 // uart_rx_one_char_block() causes a watchdog trigger, so use the non-blocking
 // uart_rx_one_char() and delay briefly to reset the watchdog.
-static uint8_t _wait_for_user(void) {
+static uint8_t aguardar_uart_rx(void) {
     uint8_t c = 0;
 
 #ifdef USE_STDIN
@@ -79,160 +78,166 @@ static uint8_t _wait_for_user(void) {
     return c;
 }
 
-void lcd1602_task(void* pvParameter) {
-    // Set up I2C
+void vLcdTask(void* pvParameter) {
     i2c_master_init();
     i2c_port_t i2c_num = I2C_MASTER_NUM;
     uint8_t address = LCD1602_I2C_ADDRESS;
 
-    // Set up the SMBus
+    // Inicializa SMBus
     smbus_info_t* smbus_info = smbus_malloc();
     ESP_ERROR_CHECK(smbus_init(smbus_info, i2c_num, address));
     ESP_ERROR_CHECK(smbus_set_timeout(smbus_info, 1000 / portTICK_RATE_MS));
 
-    // Set up the LCD1602 device with backlight off
+    // Inicializa o LCD com backlight desligado
     i2c_lcd1602_info_t* lcd_info = i2c_lcd1602_malloc();
     ESP_ERROR_CHECK(i2c_lcd1602_init(lcd_info, smbus_info, true, LCD_NUM_ROWS, LCD_NUM_COLUMNS, LCD_NUM_VISIBLE_COLUMNS));
 
     ESP_ERROR_CHECK(i2c_lcd1602_reset(lcd_info));
 
-    // turn off backlight
-    ESP_LOGI(TAG, "backlight off");
-    _wait_for_user();
+    ESP_LOGI(TAG, "desliga backlight");
+    aguardar_uart_rx();
     i2c_lcd1602_set_backlight(lcd_info, false);
 
-    // turn on backlight
-    ESP_LOGI(TAG, "backlight on");
-    _wait_for_user();
+    ESP_LOGI(TAG, "Ligar backlight");
+    aguardar_uart_rx();
     i2c_lcd1602_set_backlight(lcd_info, true);
 
-    ESP_LOGI(TAG, "cursor on");
-    _wait_for_user();
+    ESP_LOGI(TAG, "Ligar cursor");
+    aguardar_uart_rx();
     i2c_lcd1602_set_cursor(lcd_info, true);
 
-    ESP_LOGI(TAG, "display A at 0,0");
-    _wait_for_user();
+    ESP_LOGI(TAG, "Escreve 'A' em 0,0");
+    aguardar_uart_rx();
     i2c_lcd1602_move_cursor(lcd_info, 0, 0);
     i2c_lcd1602_write_char(lcd_info, 'A');
 
-    ESP_LOGI(TAG, "display B at 8,0");
-    _wait_for_user();
+    ESP_LOGI(TAG, "Escreve 'B' em 8,0");
+    aguardar_uart_rx();
     i2c_lcd1602_move_cursor(lcd_info, 8, 0);
     i2c_lcd1602_write_char(lcd_info, 'B');
 
-    ESP_LOGI(TAG, "display C at 15,1");
-    _wait_for_user();
+    ESP_LOGI(TAG, "Escreve 'C' em 15,1");
+    aguardar_uart_rx();
     i2c_lcd1602_move_cursor(lcd_info, 15, 1);
     i2c_lcd1602_write_char(lcd_info, 'C');
 
-    ESP_LOGI(TAG, "move to 0,1 and blink");  // cursor should still be on
-    _wait_for_user();
+    ESP_LOGI(TAG, "Move o cursor para 0,1 e pisca. O cursor deve estar ligado");
+    aguardar_uart_rx();
     i2c_lcd1602_move_cursor(lcd_info, 0, 1);
     i2c_lcd1602_set_blink(lcd_info, true);
 
-    ESP_LOGI(TAG, "display DE and move cursor back onto D");
-    _wait_for_user();
+    ESP_LOGI(TAG, "Escreve 'DE' e move o cursor para tras no 'D'");
+    aguardar_uart_rx();
     i2c_lcd1602_write_char(lcd_info, 'D');
     i2c_lcd1602_set_right_to_left(lcd_info);
     i2c_lcd1602_write_char(lcd_info, 'E');
     i2c_lcd1602_set_left_to_right(lcd_info);
 
-    ESP_LOGI(TAG, "disable display");
-    _wait_for_user();
+    ESP_LOGI(TAG, "Desabilita display");
+    aguardar_uart_rx();
     i2c_lcd1602_set_display(lcd_info, false);
 
-    ESP_LOGI(TAG, "display F at 7,1 (display disabled)");
-    _wait_for_user();
+    ESP_LOGI(TAG, "Escreve 'F' em 7,1 (display desabilitado)");
+    aguardar_uart_rx();
     i2c_lcd1602_move_cursor(lcd_info, 7, 1);
     i2c_lcd1602_write_char(lcd_info, 'F');
 
-    ESP_LOGI(TAG, "enable display");
-    _wait_for_user();
+    ESP_LOGI(TAG, "Habilita display");
+    aguardar_uart_rx();
     i2c_lcd1602_set_display(lcd_info, true);
 
-    ESP_LOGI(TAG, "disable blink");
-    _wait_for_user();
-    i2c_lcd1602_set_blink(lcd_info, false);  // cursor should still be on
+    ESP_LOGI(TAG, "Desabilita cursor piscante");
+    aguardar_uart_rx();
+    i2c_lcd1602_set_blink(lcd_info, false);
 
-    ESP_LOGI(TAG, "disable cursor");
-    _wait_for_user();
+    ESP_LOGI(TAG, "Desabilita cursor");
+    aguardar_uart_rx();
     i2c_lcd1602_set_cursor(lcd_info, false);
 
-    ESP_LOGI(TAG, "display alphabet from 0,0");  // should overflow to second line at "ABC..."
-    _wait_for_user();
+    ESP_LOGI(TAG, "Escreve todos caracteres alfanumericos apartir de 0,0");
+    aguardar_uart_rx();
     i2c_lcd1602_home(lcd_info);
-    i2c_lcd1602_write_string(lcd_info, "abcdefghijklmnopqrstuvwxyz0123456789.,-+ABCDEFGHIJKLMNOPQRSTUVWXYZ");
+    i2c_lcd1602_write_string(lcd_info, "abcdefghijklmnopqrst" \
+                                       "uvwxyz0123456789.,-+" \
+                                       "ABCDEFGHIJKLMNOPQRST" \
+                                       "UVWXYZ");
 
-    ESP_LOGI(TAG, "scroll display left 8 places slowly");
-    _wait_for_user();
+    ESP_LOGI(TAG, "Escreve 'Aqui tem agua pro chimarrao!' em 0,1");
+    aguardar_uart_rx();
+    i2c_lcd1602_move_cursor(lcd_info, 0, 1);
+    i2c_lcd1602_write_string(lcd_info, "   Aqui tem agua");
+    i2c_lcd1602_move_cursor(lcd_info, 0, 2);
+    i2c_lcd1602_write_string(lcd_info, "   pro chimarrao!");
+
+    ESP_LOGI(TAG, "Rola o display para esquerda, 8 casas, devagar");
+    aguardar_uart_rx();
     for (int i = 0; i < 8; ++i) {
         i2c_lcd1602_scroll_display_left(lcd_info);
         vTaskDelay(200 / portTICK_RATE_MS);
     }
 
-    ESP_LOGI(TAG, "scroll display right 8 places quickly");
-    _wait_for_user();
+    ESP_LOGI(TAG, "Rola o display para direita, 8 casas, imediatamente");
+    aguardar_uart_rx();
     for (int i = 0; i < 8; ++i) {
         i2c_lcd1602_scroll_display_right(lcd_info);
     }
 
-    ESP_LOGI(TAG, "move to 8,0 and show cursor");
-    _wait_for_user();
+    ESP_LOGI(TAG, "Move para 8,0 e mostra o cursor");
+    aguardar_uart_rx();
     i2c_lcd1602_move_cursor(lcd_info, 8, 0);
     i2c_lcd1602_set_cursor(lcd_info, true);
 
-    ESP_LOGI(TAG, "move cursor 5 places to the right");
-    _wait_for_user();
+    ESP_LOGI(TAG, "Move o cursor 5 casas para a direita");
+    aguardar_uart_rx();
     for (int i = 0; i < 5; ++i) {
         i2c_lcd1602_move_cursor_right(lcd_info);
     }
 
-    ESP_LOGI(TAG, "move cursor 3 places to the left");
-    _wait_for_user();
+    ESP_LOGI(TAG, "Move o cursor 3 casas para a esquerda");
+    aguardar_uart_rx();
     for (int i = 0; i < 3; ++i) {
         i2c_lcd1602_move_cursor_left(lcd_info);
     }
 
-    ESP_LOGI(TAG, "enable auto-scroll and display >>>>>");
-    _wait_for_user();
+    ESP_LOGI(TAG, "Habilita auto-scroll e escreve '>>>>>'");
+    aguardar_uart_rx();
     i2c_lcd1602_set_auto_scroll(lcd_info, true);
     for (int i = 0; i < 5; ++i) {
         i2c_lcd1602_write_char(lcd_info, '>');
         vTaskDelay(200 / portTICK_RATE_MS);
     }
 
-    ESP_LOGI(TAG, "change address counter to decrement (right to left) and display <<<<<");
-    _wait_for_user();
+    ESP_LOGI(TAG, "Muda endereco do contador para decrementar (escreve da direita para esquerda) e escreve '<<<<<'");
+    aguardar_uart_rx();
     i2c_lcd1602_set_right_to_left(lcd_info);
     for (int i = 0; i < 5; ++i) {
         i2c_lcd1602_write_char(lcd_info, '<');
         vTaskDelay(200 / portTICK_RATE_MS);
     }
 
-    ESP_LOGI(TAG, "disable auto-scroll and display +++++");
-    _wait_for_user();
+    ESP_LOGI(TAG, "Desabilita auto-scroll e esceve '+++++'");
+    aguardar_uart_rx();
     i2c_lcd1602_set_auto_scroll(lcd_info, false);
     for (int i = 0; i < 5; ++i) {
         i2c_lcd1602_write_char(lcd_info, '+');
         vTaskDelay(200 / portTICK_RATE_MS);
     }
 
-    ESP_LOGI(TAG, "set left_to_right and display >>>>>");
-    _wait_for_user();
+    ESP_LOGI(TAG, "Ajusta escrita de esquerda para direita e escreve '>>>>>'");
+    aguardar_uart_rx();
     i2c_lcd1602_set_left_to_right(lcd_info);
     for (int i = 0; i < 5; ++i) {
         i2c_lcd1602_write_char(lcd_info, '>');
         vTaskDelay(200 / portTICK_RATE_MS);
     }
 
-    ESP_LOGI(TAG, "clear display and disable cursor");
-    _wait_for_user();
+    ESP_LOGI(TAG, "Limpa display e o desabilita");
+    aguardar_uart_rx();
     i2c_lcd1602_clear(lcd_info);
     i2c_lcd1602_set_cursor(lcd_info, false);
 
-    ESP_LOGI(TAG, "create and display custom characters");
-    _wait_for_user();
-    // https://github.com/agnunez/ESP8266-I2C-LCD1602/blob/master/examples/CustomChars/CustomChars.ino
+    ESP_LOGI(TAG, "Cria caracteres especiais");
+    aguardar_uart_rx();
     uint8_t bell[8] = {0x4, 0xe, 0xe, 0xe, 0x1f, 0x0, 0x4};
     uint8_t note[8] = {0x2, 0x3, 0x2, 0xe, 0x1e, 0xc, 0x0};
     uint8_t clock[8] = {0x0, 0xe, 0x15, 0x17, 0x11, 0xe, 0x0};
@@ -250,7 +255,7 @@ void lcd1602_task(void* pvParameter) {
     i2c_lcd1602_define_char(lcd_info, I2C_LCD1602_INDEX_CUSTOM_6, cross);
     i2c_lcd1602_define_char(lcd_info, I2C_LCD1602_INDEX_CUSTOM_7, retarrow);
 
-    // after defining custom characters, DDRAM address must be set by home() or moving the cursor
+    // Após definir caracteres customizados, o endereço DDRAM deve ser definido por home() ou movendo o cursor
     i2c_lcd1602_move_cursor(lcd_info, 0, 0);
     i2c_lcd1602_write_char(lcd_info, I2C_LCD1602_CHARACTER_CUSTOM_0);
     i2c_lcd1602_write_char(lcd_info, I2C_LCD1602_CHARACTER_CUSTOM_1);
@@ -261,8 +266,8 @@ void lcd1602_task(void* pvParameter) {
     i2c_lcd1602_write_char(lcd_info, I2C_LCD1602_CHARACTER_CUSTOM_6);
     i2c_lcd1602_write_char(lcd_info, I2C_LCD1602_CHARACTER_CUSTOM_7);
 
-    ESP_LOGI(TAG, "display special characters");
-    _wait_for_user();
+    ESP_LOGI(TAG, "Escreve os caracteres especiais");
+    aguardar_uart_rx();
     i2c_lcd1602_move_cursor(lcd_info, 0, 1);
     i2c_lcd1602_write_char(lcd_info, I2C_LCD1602_CHARACTER_ALPHA);
     i2c_lcd1602_write_char(lcd_info, I2C_LCD1602_CHARACTER_BETA);
@@ -279,8 +284,8 @@ void lcd1602_task(void* pvParameter) {
     i2c_lcd1602_write_char(lcd_info, I2C_LCD1602_CHARACTER_DIVIDE);
     i2c_lcd1602_write_char(lcd_info, I2C_LCD1602_CHARACTER_BLOCK);
 
-    ESP_LOGI(TAG, "display all characters (loop)");
-    _wait_for_user();
+    ESP_LOGI(TAG, "Escreve todos os caracteres (loop)");
+    aguardar_uart_rx();
     i2c_lcd1602_clear(lcd_info);
     i2c_lcd1602_set_cursor(lcd_info, true);
     uint8_t c = 0;
@@ -306,5 +311,5 @@ void lcd1602_task(void* pvParameter) {
 }
 
 void app_main() {
-    xTaskCreate(&lcd1602_task, "lcd1602_task", 4096, NULL, 5, NULL);
+    xTaskCreate(&vLcdTask, "vLcdTask", 4096, NULL, 0, NULL);
 }
