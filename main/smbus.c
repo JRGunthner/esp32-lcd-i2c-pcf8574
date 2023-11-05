@@ -244,32 +244,32 @@ esp_err_t smbus_receber_byte(const smbus_info_t* smbus_info, uint8_t* data) {
     return err;
 }
 
-esp_err_t smbus_enviar_cmd_byte(const smbus_info_t* smbus_info, uint8_t command, uint8_t data) {
+esp_err_t smbus_enviar_cmd_byte(const smbus_info_t* smbus_info, uint8_t cmd, uint8_t data) {
     // Protocolo:
     // [S | ADDR | Wr | As | COMMAND | As | DATA | As | P]
-    return _write_bytes(smbus_info, command, &data, 1);
+    return _write_bytes(smbus_info, cmd, &data, 1);
 }
 
-esp_err_t smbus_enviar_cmd_word(const smbus_info_t* smbus_info, uint8_t command, uint16_t data) {
+esp_err_t smbus_enviar_cmd_word(const smbus_info_t* smbus_info, uint8_t cmd, uint16_t data) {
     // Protocolo:
     // [S | ADDR | Wr | As | COMMAND | As | DATA-LOW | As | DATA-HIGH | As | P]
     uint8_t temp[2] = {data & 0xff, (data >> 8) & 0xff};
-    return _write_bytes(smbus_info, command, temp, 2);
+    return _write_bytes(smbus_info, cmd, temp, 2);
 }
 
-esp_err_t smbus_receber_cmd_byte(const smbus_info_t* smbus_info, uint8_t command, uint8_t* data) {
+esp_err_t smbus_receber_cmd_byte(const smbus_info_t* smbus_info, uint8_t cmd, uint8_t* data) {
     // Protocolo:
     // [S | ADDR | Wr | As | COMMAND | As | Sr | ADDR | Rd | As | DATA | N | P]
-    return _read_bytes(smbus_info, command, data, 1);
+    return _read_bytes(smbus_info, cmd, data, 1);
 }
 
-esp_err_t smbus_receber_cmd_word(const smbus_info_t* smbus_info, uint8_t command, uint16_t* data) {
+esp_err_t smbus_receber_cmd_word(const smbus_info_t* smbus_info, uint8_t cmd, uint16_t* data) {
     // Protocolo:
     // [S | ADDR | Wr | As | COMMAND | As | Sr | ADDR | Rd | As | DATA-LOW | A | DATA-HIGH | N | P]
     esp_err_t err = ESP_FAIL;
     uint8_t temp[2] = {0};
     if (data) {
-        err = _read_bytes(smbus_info, command, temp, 2);
+        err = _read_bytes(smbus_info, cmd, temp, 2);
         if (err == ESP_OK) {
             *data = (temp[1] << 8) + temp[0];
         } else {
@@ -279,42 +279,43 @@ esp_err_t smbus_receber_cmd_word(const smbus_info_t* smbus_info, uint8_t command
     return err;
 }
 
-esp_err_t smbus_enviar_cmd_block(const smbus_info_t* smbus_info, uint8_t command, uint8_t* data, uint8_t len) {
+esp_err_t smbus_enviar_cmd_block(const smbus_info_t* smbus_info, uint8_t cmd, uint8_t* data, uint8_t len) {
     // Protocolo:
     // [S | ADDR | Wr | As | COMMAND | As | LEN | As | DATA-1 | As | DATA-2 | As ... | DATA-LEN | As | P]
     esp_err_t err = ESP_FAIL;
     if (smbus_confirmar_init(smbus_info) && data) {
-        i2c_cmd_handle_t cmd = i2c_cmd_link_create();
-        i2c_master_start(cmd);
-        i2c_master_write_byte(cmd, smbus_info->address << 1 | WRITE_BIT, ACK_CHECK);
-        i2c_master_write_byte(cmd, command, ACK_CHECK);
-        i2c_master_write_byte(cmd, len, ACK_CHECK);
+        i2c_cmd_handle_t i2c_cmd = i2c_cmd_link_create();
+        i2c_master_start(i2c_cmd);
+        i2c_master_write_byte(i2c_cmd, smbus_info->address << 1 | WRITE_BIT, ACK_CHECK);
+        i2c_master_write_byte(i2c_cmd, cmd, ACK_CHECK);
+        i2c_master_write_byte(i2c_cmd, len, ACK_CHECK);
         for (size_t i = 0; i < len; ++i) {
-            i2c_master_write_byte(cmd, data[i], ACK_CHECK);
+            i2c_master_write_byte(i2c_cmd, data[i], ACK_CHECK);
         }
-        i2c_master_stop(cmd);
-        err = smbus_verificar_falha_i2c(i2c_master_cmd_begin(smbus_info->i2c_port, cmd, smbus_info->timeout));
-        i2c_cmd_link_delete(cmd);
+        i2c_master_stop(i2c_cmd);
+        err = smbus_verificar_falha_i2c(i2c_master_cmd_begin(smbus_info->i2c_port, i2c_cmd, smbus_info->timeout));
+        i2c_cmd_link_delete(i2c_cmd);
     }
     return err;
 }
 
-esp_err_t smbus_receber_cmd_block(const smbus_info_t* smbus_info, uint8_t command, uint8_t* data, uint8_t* len) {
+esp_err_t smbus_receber_cmd_block(const smbus_info_t* smbus_info, uint8_t cmd, uint8_t* data, uint8_t* len) {
     // Protocolo:
     // [S | ADDR | Wr | As | COMMAND | As | Sr | ADDR | Rd | As | LENs | A | DATA-1 | A | DATA-2 | A ... | DATA-LEN | N | P]
     esp_err_t err = ESP_FAIL;
 
     if (smbus_confirmar_init(smbus_info) && data && len) {
-        i2c_cmd_handle_t cmd = i2c_cmd_link_create();
-        i2c_master_start(cmd);
-        i2c_master_write_byte(cmd, smbus_info->address << 1 | WRITE_BIT, ACK_CHECK);
-        i2c_master_write_byte(cmd, command, ACK_CHECK);
-        i2c_master_start(cmd);
-        i2c_master_write_byte(cmd, smbus_info->address << 1 | READ_BIT, ACK_CHECK);
+        i2c_cmd_handle_t i2c_cmd = i2c_cmd_link_create();
+        i2c_master_start(i2c_cmd);
+        i2c_master_write_byte(i2c_cmd, smbus_info->address << 1 | WRITE_BIT, ACK_CHECK);
+        i2c_master_write_byte(i2c_cmd, cmd, ACK_CHECK);
+        i2c_master_start(i2c_cmd);
+        i2c_master_write_byte(i2c_cmd, smbus_info->address << 1 | READ_BIT, ACK_CHECK);
+
         uint8_t slave_len = 0;
-        i2c_master_read_byte(cmd, &slave_len, ACK_VALUE);
-        err = smbus_verificar_falha_i2c(i2c_master_cmd_begin(smbus_info->i2c_port, cmd, smbus_info->timeout));
-        i2c_cmd_link_delete(cmd);
+        i2c_master_read_byte(i2c_cmd, &slave_len, ACK_VALUE);
+        err = smbus_verificar_falha_i2c(i2c_master_cmd_begin(smbus_info->i2c_port, i2c_cmd, smbus_info->timeout));
+        i2c_cmd_link_delete(i2c_cmd);
 
         if (err != ESP_OK) {
             *len = 0;
@@ -326,14 +327,14 @@ esp_err_t smbus_receber_cmd_block(const smbus_info_t* smbus_info, uint8_t comman
             slave_len = *len;
         }
 
-        cmd = i2c_cmd_link_create();
+        i2c_cmd = i2c_cmd_link_create();
         for (size_t i = 0; i < slave_len - 1; ++i) {
-            i2c_master_read_byte(cmd, &data[i], ACK_VALUE);
+            i2c_master_read_byte(i2c_cmd, &data[i], ACK_VALUE);
         }
-        i2c_master_read_byte(cmd, &data[slave_len - 1], NACK_VALUE);
-        i2c_master_stop(cmd);
-        err = smbus_verificar_falha_i2c(i2c_master_cmd_begin(smbus_info->i2c_port, cmd, smbus_info->timeout));
-        i2c_cmd_link_delete(cmd);
+        i2c_master_read_byte(i2c_cmd, &data[slave_len - 1], NACK_VALUE);
+        i2c_master_stop(i2c_cmd);
+        err = smbus_verificar_falha_i2c(i2c_master_cmd_begin(smbus_info->i2c_port, i2c_cmd, smbus_info->timeout));
+        i2c_cmd_link_delete(i2c_cmd);
 
         if (err == ESP_OK) {
             *len = slave_len;
@@ -344,14 +345,14 @@ esp_err_t smbus_receber_cmd_block(const smbus_info_t* smbus_info, uint8_t comman
     return err;
 }
 
-esp_err_t smbus_i2c_enviar_cmd_block(const smbus_info_t* smbus_info, uint8_t command, uint8_t* data, size_t len) {
+esp_err_t smbus_i2c_enviar_cmd_block(const smbus_info_t* smbus_info, uint8_t cmd, uint8_t* data, size_t len) {
     // Protocolo:
     // [S | ADDR | Wr | As | COMMAND | As | (DATA | As){*len} | P]
-    return _write_bytes(smbus_info, command, data, len);
+    return _write_bytes(smbus_info, cmd, data, len);
 }
 
-esp_err_t smbus_i2c_receber_cmd_block(const smbus_info_t* smbus_info, uint8_t command, uint8_t* data, size_t len) {
+esp_err_t smbus_i2c_receber_cmd_block(const smbus_info_t* smbus_info, uint8_t cmd, uint8_t* data, size_t len) {
     // Protocolo:
     // [S | ADDR | Wr | As | COMMAND | As | Sr | ADDR | Rd | As | (DATAs | A){*len-1} | DATAs | N | P]
-    return _read_bytes(smbus_info, command, data, len);
+    return _read_bytes(smbus_info, cmd, data, len);
 }

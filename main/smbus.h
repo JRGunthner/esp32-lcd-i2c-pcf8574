@@ -80,40 +80,40 @@ esp_err_t smbus_receber_byte(const smbus_info_t* smbus_info, uint8_t* data);
 /**
  * @brief Envia um byte para um dispositivo escravo com um código de comando.
  * @param[in] smbus_info Ponteiro para a instância SMBus info inicializada.
- * @param[in] command    Código de comando específico do dispositivo.
+ * @param[in] cmd        Código de comando específico do dispositivo.
  * @param[in] data       Byte a ser enviado.
  * @return ESP_OK se bem sucedido, ESP_FAIL ou ESP_ERR_* se ocorreu um erro.
  */
-esp_err_t smbus_enviar_cmd_byte(const smbus_info_t* smbus_info, uint8_t command, uint8_t data);
+esp_err_t smbus_enviar_cmd_byte(const smbus_info_t* smbus_info, uint8_t cmd, uint8_t data);
 
 /**
  * @brief Envia uma word (2 bytes) para um dispositivo escravo com um código de comando.
  *        O byte menos significativo é transmitido primeiro.
  * @param[in] smbus_info Ponteiro para a instância SMBus info inicializada.
- * @param[in] command    Código de comando específico do dispositivo.
+ * @param[in] cmd        Código de comando específico do dispositivo.
  * @param[in] data       Word a ser enviada.
  * @return ESP_OK se bem sucedido, ESP_FAIL ou ESP_ERR_* se ocorreu um erro.
  */
-esp_err_t smbus_enviar_cmd_word(const smbus_info_t* smbus_info, uint8_t command, uint16_t data);
+esp_err_t smbus_enviar_cmd_word(const smbus_info_t* smbus_info, uint8_t cmd, uint16_t data);
 
 /**
  * @brief Lê um array de bytes de um dispositivo escravo com um código de comando.
  * @param[in]  smbus_info Ponteiro para a instância SMBus info inicializada.
- * @param[in]  command    Código de comando específico do dispositivo.
+ * @param[in]  cmd        Código de comando específico do dispositivo.
  * @param[out] data       Dados recebidos do dispositivo escravo.
  * @return ESP_OK se bem sucedido, ESP_FAIL ou ESP_ERR_* se ocorreu um erro.
  */
-esp_err_t smbus_receber_cmd_byte(const smbus_info_t* smbus_info, uint8_t command, uint8_t* data);
+esp_err_t smbus_receber_cmd_byte(const smbus_info_t* smbus_info, uint8_t cmd, uint8_t* data);
 
 /**
  * @brief Lê um array de words (2 bytes) de um dispositivo escravo com um código de comando.
  *        O byte menos significativo é colocado no primeiro local do array.
  * @param[in]  smbus_info Ponteiro para a instância SMBus info inicializada.
- * @param[in]  command    Código de comando específico do dispositivo.
+ * @param[in]  cmd        Código de comando específico do dispositivo.
  * @param[out] data       Dados recebidos do dispositivo escravo.
  * @return ESP_OK se bem sucedido, ESP_FAIL ou ESP_ERR_* se ocorreu um erro.
  */
-esp_err_t smbus_receber_cmd_word(const smbus_info_t* smbus_info, uint8_t command, uint16_t* data);
+esp_err_t smbus_receber_cmd_word(const smbus_info_t* smbus_info, uint8_t cmd, uint16_t* data);
 
 /**
  * 
@@ -121,24 +121,24 @@ esp_err_t smbus_receber_cmd_word(const smbus_info_t* smbus_info, uint8_t command
  *        Esta função usa uma contagem de bytes para negociar o comprimento da transação.
  *        O primeiro byte no array de dados é transmitido primeiro.
  * @param[in] smbus_info Ponteiro para a instância SMBus info inicializada.
- * @param[in] command    Código de comando específico do dispositivo.
+ * @param[in] cmd        Código de comando específico do dispositivo.
  * @param[in] data       Dados a serem enviados.
  * @param[in] len        Número de bytes para enviar ao dispositivo escravo.
  * @return ESP_OK se bem sucedido, ESP_FAIL ou ESP_ERR_* se ocorreu um erro.
  */
-esp_err_t smbus_enviar_cmd_block(const smbus_info_t* smbus_info, uint8_t command, uint8_t* data, uint8_t len);
+esp_err_t smbus_enviar_cmd_block(const smbus_info_t* smbus_info, uint8_t cmd, uint8_t* data, uint8_t len);
 
 /**
  * @brief Lê até 255 bytes de um dispositivo escravo com um código de comando.
  *        Esta função usa uma contagem de bytes para negociar o comprimento da transação.
  *        O primeiro byte recebido é colocado no primeiro local do array.
  * @param[in]  smbus_info Ponteiro para a instância SMBus info inicializada.
- * @param[in]  command    Código de comando específico do dispositivo.
+ * @param[in]  cmd        Código de comando específico do dispositivo.
  * @param[out] data       Dados recebidos do dispositivo escravo.
  * @param[in]  len        Tamanho do array de dados, e número de bytes realmente recebidos.
  * @return ESP_OK se bem sucedido, ESP_FAIL ou ESP_ERR_* se ocorreu um erro.
  */
-esp_err_t smbus_receber_cmd_block(const smbus_info_t* smbus_info, uint8_t command, uint8_t* data, uint8_t* len);
+esp_err_t smbus_receber_cmd_block(const smbus_info_t* smbus_info, uint8_t cmd, uint8_t* data, uint8_t* len);
 
 /**
  * @brief Escreve um array de bytes em um dispositivo escravo com um código de comando.
@@ -146,12 +146,12 @@ esp_err_t smbus_receber_cmd_block(const smbus_info_t* smbus_info, uint8_t comman
  *        O primeiro byte na matriz de dados é transmitido primeiro.
  *        Esta operação não é definida pela especificação SMBus.
  * @param[in] smbus_info Ponteiro para a instância SMBus info inicializada.
- * @param[in] command    Código de comando específico do dispositivo.
+ * @param[in] cmd        Código de comando específico do dispositivo.
  * @param[in] data       Dados a serem enviados.
  * @param[in] len        Número de bytes para enviar ao dispositivo escravo.
  * @return ESP_OK se bem sucedido, ESP_FAIL ou ESP_ERR_* se ocorreu um erro.
  */
-esp_err_t smbus_i2c_enviar_cmd_block(const smbus_info_t* smbus_info, uint8_t command, uint8_t* data, size_t len);
+esp_err_t smbus_i2c_enviar_cmd_block(const smbus_info_t* smbus_info, uint8_t cmd, uint8_t* data, size_t len);
 
 /**
  * @brief Lê bytes de um dispositivo escravo com um código de comando (formato combiado).
@@ -159,12 +159,12 @@ esp_err_t smbus_i2c_enviar_cmd_block(const smbus_info_t* smbus_info, uint8_t com
  *        O primeiro byte recebido é colocado no primeiro local do array.
  *        Esta operação não é definida pela especificação SMBus.
  * @param[in]  smbus_info Ponteiro para a instância SMBus info inicializada.
- * @param[in]  command    Código de comando específico do dispositivo.
+ * @param[in]  cmd        Código de comando específico do dispositivo.
  * @param[out] data       Dados recebidos do dispositivo escravo.
  * @param[in]  len        Tamanho do array de dados. Se o escravo não fornecer bytes suficientes, ESP_ERR_TIMEOUT será retornado.
  * @return ESP_OK se bem sucedido, ESP_FAIL ou ESP_ERR_* se ocorreu um erro.
  */
-esp_err_t smbus_i2c_receber_cmd_block(const smbus_info_t* smbus_info, uint8_t command, uint8_t* data, size_t len);
+esp_err_t smbus_i2c_receber_cmd_block(const smbus_info_t* smbus_info, uint8_t cmd, uint8_t* data, size_t len);
 
 #ifdef __cplusplus
 }
