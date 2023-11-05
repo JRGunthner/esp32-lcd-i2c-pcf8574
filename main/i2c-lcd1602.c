@@ -155,7 +155,7 @@ static uint8_t _set_or_clear(uint8_t flags, bool condition, uint8_t flag) {
 static esp_err_t _write_to_expander(const i2c_lcd1602_info_t* i2c_lcd1602_info, uint8_t data) {
     // backlight flag must be included with every write to maintain backlight state
     ESP_LOGD(TAG, "_write_to_expander 0x%02x", data | i2c_lcd1602_info->backlight_flag);
-    return smbus_send_byte(i2c_lcd1602_info->smbus_info, data | i2c_lcd1602_info->backlight_flag);
+    return smbus_enviar_byte(i2c_lcd1602_info->smbus_info, data | i2c_lcd1602_info->backlight_flag);
 }
 
 // IMPORTANT - for the display to stay "in sync" it is important that errors do

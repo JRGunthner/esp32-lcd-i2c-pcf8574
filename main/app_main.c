@@ -1,8 +1,3 @@
-/**
- * @file app_main.c
- * @brief Example application for the LCD1602 16x2 Character Dot Matrix LCD display via I2C backpack..
- */
-
 #include <stdio.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -34,7 +29,7 @@
 
 // Undefine USE_STDIN if no stdin is available (e.g. no USB UART) - a fixed delay will occur instead of a wait for a
 // keypress.
-//#define USE_STDIN 1
+#define USE_STDIN 1
 
 #define I2C_MASTER_NUM        I2C_NUM_0
 #define I2C_MASTER_TX_BUF_LEN 0  // disabled
