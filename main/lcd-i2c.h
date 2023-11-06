@@ -9,14 +9,14 @@ extern "C" {
 #endif
 
 typedef struct {
-    bool init;                      // True se o display foi inicializado
-    smbus_t* smbus;                 // Ponteiro para a estrutura smbus
-    uint8_t backlight;              // Backlight habilitado (1), desabilitado (0)
-    uint8_t num_linhas;             // Número de linhas
-    uint8_t num_colunas;            // Número de colunas
-    uint8_t num_celulas;            // Número de células totais, incluindo as não visíveis
-    uint8_t display_control_flags;  // Atividade atual do controle do display
-    uint8_t entry_mode_flags;       // modo de entrada ativo atual
+    bool init;             // True se o display foi inicializado
+    smbus_t* smbus;        // Ponteiro para a estrutura smbus
+    uint8_t backlight;     // Backlight habilitado (1), desabilitado (0)
+    uint8_t num_linhas;    // Número de linhas
+    uint8_t num_colunas;   // Número de colunas
+    uint8_t num_celulas;   // Número de células totais, incluindo as não visíveis
+    uint8_t display_ctrl;  // Atividade atual do controle do display
+    uint8_t modo_entrada;  // modo de entrada ativo atual
 } lcd_i2c_t;
 
 // Caracteres especiais customizados para o código ROM A00
@@ -57,7 +57,7 @@ typedef enum {
     I2C_LCD1602_INDEX_CUSTOM_7,
 } i2c_lcd1602_custom_index_t;
 
-#define LCD_I2C_ERROR_CHECK(x)                                         \
+#define LCD_I2C_ERROR_CHECK(x)                                             \
     do {                                                                   \
         esp_err_t rc = (x);                                                \
         if (rc != ESP_OK) {                                                \
@@ -92,8 +92,8 @@ void lcd_i2c_free(lcd_i2c_t** lcd_i2c);
  *                               Valores típicos incluem 16 (1602) ou 20 (2004).
  * @return ESP_OK se bem sucedido, caso contrário, uma constante de erro.
  */
-esp_err_t lcd_i2c_init(lcd_i2c_t* lcd_i2c, smbus_t* smbus, bool backlight, uint8_t num_linhas,
-                       uint8_t num_celulas, uint8_t num_colunas);
+esp_err_t lcd_i2c_init(lcd_i2c_t* lcd_i2c, smbus_t* smbus, bool backlight, uint8_t num_linhas, uint8_t num_celulas,
+                       uint8_t num_colunas);
 
 /**
  * @brief Reset LCD. Os caracteres customizados serão apagados.

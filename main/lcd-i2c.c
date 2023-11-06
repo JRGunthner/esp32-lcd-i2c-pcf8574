@@ -163,8 +163,8 @@ void lcd_i2c_free(lcd_i2c_t** lcd_i2c) {
 }
 
 // Procedimento de inicialização na pagina 45/46 do datasheet do HD44780.
-esp_err_t lcd_i2c_init(lcd_i2c_t* lcd_i2c, smbus_t* smbus, bool backlight, uint8_t num_linhas,
-                       uint8_t num_celulas, uint8_t num_colunas) {
+esp_err_t lcd_i2c_init(lcd_i2c_t* lcd_i2c, smbus_t* smbus, bool backlight, uint8_t num_linhas, uint8_t num_celulas,
+                       uint8_t num_colunas) {
     esp_err_t ret = ESP_FAIL;
     if (lcd_i2c != NULL) {
         lcd_i2c->smbus = smbus;
@@ -174,10 +174,10 @@ esp_err_t lcd_i2c_init(lcd_i2c_t* lcd_i2c, smbus_t* smbus, bool backlight, uint8
         lcd_i2c->num_colunas = num_colunas;
 
         // display ligado, sem cursor, sem cursor piscante
-        lcd_i2c->display_control_flags = FLAG_DISPLAY_ON | FLAG_CURSOR_OFF | FLAG_BLINK_OFF;
+        lcd_i2c->display_ctrl = FLAG_DISPLAY_ON | FLAG_CURSOR_OFF | FLAG_BLINK_OFF;
 
         // justificado à esquerda, texto da esquerda para a direita
-        lcd_i2c->entry_mode_flags = FLAG_INCREMENTA | FLAG_SHIFT_OFF;
+        lcd_i2c->modo_entrada = FLAG_INCREMENTA | FLAG_SHIFT_OFF;
 
         lcd_i2c->init = true;
 
@@ -245,7 +245,7 @@ esp_err_t lcd_i2c_init_config(const lcd_i2c_t* lcd_i2c) {
         ESP_LOGE(TAG, "reset: lcd_i2c_enviar_cmd 1 falhou: %d", last_err);
     }
 
-    last_err = lcd_i2c_enviar_cmd(lcd_i2c, CMD_CONTROLE_DISPLAY | lcd_i2c->display_control_flags);
+    last_err = lcd_i2c_enviar_cmd(lcd_i2c, CMD_CONTROLE_DISPLAY | lcd_i2c->display_ctrl);
     if (last_err != ESP_OK) {
         if (first_err == ESP_OK)
             first_err = last_err;
@@ -259,7 +259,7 @@ esp_err_t lcd_i2c_init_config(const lcd_i2c_t* lcd_i2c) {
         ESP_LOGE(TAG, "reset: lcd_i2c_limpar_display falhou: %d", last_err);
     }
 
-    last_err = lcd_i2c_enviar_cmd(lcd_i2c, CMD_MODO_CONFIG | lcd_i2c->entry_mode_flags);
+    last_err = lcd_i2c_enviar_cmd(lcd_i2c, CMD_MODO_CONFIG | lcd_i2c->modo_entrada);
     if (last_err != ESP_OK) {
         if (first_err == ESP_OK)
             first_err = last_err;
@@ -321,9 +321,8 @@ esp_err_t lcd_i2c_backlight(lcd_i2c_t* lcd_i2c, bool enable) {
 esp_err_t lcd_i2c_habilita_display(lcd_i2c_t* lcd_i2c, bool enable) {
     esp_err_t ret = ESP_FAIL;
     if (lcd_i2c_confirmar_init(lcd_i2c)) {
-        lcd_i2c->display_control_flags =
-            lcd_i2c_config_flag(lcd_i2c->display_control_flags, enable, FLAG_DISPLAY_ON);
-        ret = lcd_i2c_enviar_cmd(lcd_i2c, CMD_CONTROLE_DISPLAY | lcd_i2c->display_control_flags);
+        lcd_i2c->display_ctrl = lcd_i2c_config_flag(lcd_i2c->display_ctrl, enable, FLAG_DISPLAY_ON);
+        ret = lcd_i2c_enviar_cmd(lcd_i2c, CMD_CONTROLE_DISPLAY | lcd_i2c->display_ctrl);
     }
     return ret;
 }
@@ -331,9 +330,8 @@ esp_err_t lcd_i2c_habilita_display(lcd_i2c_t* lcd_i2c, bool enable) {
 esp_err_t lcd_i2c_config_cursor(lcd_i2c_t* lcd_i2c, bool enable) {
     esp_err_t ret = ESP_FAIL;
     if (lcd_i2c_confirmar_init(lcd_i2c)) {
-        lcd_i2c->display_control_flags =
-            lcd_i2c_config_flag(lcd_i2c->display_control_flags, enable, FLAG_CURSOR_ON);
-        ret = lcd_i2c_enviar_cmd(lcd_i2c, CMD_CONTROLE_DISPLAY | lcd_i2c->display_control_flags);
+        lcd_i2c->display_ctrl = lcd_i2c_config_flag(lcd_i2c->display_ctrl, enable, FLAG_CURSOR_ON);
+        ret = lcd_i2c_enviar_cmd(lcd_i2c, CMD_CONTROLE_DISPLAY | lcd_i2c->display_ctrl);
     }
     return ret;
 }
@@ -341,9 +339,8 @@ esp_err_t lcd_i2c_config_cursor(lcd_i2c_t* lcd_i2c, bool enable) {
 esp_err_t lcd_i2c_config_cursor_piscante(lcd_i2c_t* lcd_i2c, bool enable) {
     esp_err_t ret = ESP_FAIL;
     if (lcd_i2c_confirmar_init(lcd_i2c)) {
-        lcd_i2c->display_control_flags =
-            lcd_i2c_config_flag(lcd_i2c->display_control_flags, enable, FLAG_BLINK_ON);
-        ret = lcd_i2c_enviar_cmd(lcd_i2c, CMD_CONTROLE_DISPLAY | lcd_i2c->display_control_flags);
+        lcd_i2c->display_ctrl = lcd_i2c_config_flag(lcd_i2c->display_ctrl, enable, FLAG_BLINK_ON);
+        ret = lcd_i2c_enviar_cmd(lcd_i2c, CMD_CONTROLE_DISPLAY | lcd_i2c->display_ctrl);
     }
     return ret;
 }
@@ -351,8 +348,8 @@ esp_err_t lcd_i2c_config_cursor_piscante(lcd_i2c_t* lcd_i2c, bool enable) {
 esp_err_t lcd_i2c_esquerda_para_direita(lcd_i2c_t* lcd_i2c) {
     esp_err_t ret = ESP_FAIL;
     if (lcd_i2c_confirmar_init(lcd_i2c)) {
-        lcd_i2c->entry_mode_flags |= FLAG_INCREMENTA;
-        ret = lcd_i2c_enviar_cmd(lcd_i2c, CMD_MODO_CONFIG | lcd_i2c->entry_mode_flags);
+        lcd_i2c->modo_entrada |= FLAG_INCREMENTA;
+        ret = lcd_i2c_enviar_cmd(lcd_i2c, CMD_MODO_CONFIG | lcd_i2c->modo_entrada);
     }
     return ret;
 }
@@ -360,8 +357,8 @@ esp_err_t lcd_i2c_esquerda_para_direita(lcd_i2c_t* lcd_i2c) {
 esp_err_t lcd_i2c_direita_para_esquerda(lcd_i2c_t* lcd_i2c) {
     esp_err_t ret = ESP_FAIL;
     if (lcd_i2c_confirmar_init(lcd_i2c)) {
-        lcd_i2c->entry_mode_flags &= ~FLAG_INCREMENTA;
-        ret = lcd_i2c_enviar_cmd(lcd_i2c, CMD_MODO_CONFIG | lcd_i2c->entry_mode_flags);
+        lcd_i2c->modo_entrada &= ~FLAG_INCREMENTA;
+        ret = lcd_i2c_enviar_cmd(lcd_i2c, CMD_MODO_CONFIG | lcd_i2c->modo_entrada);
     }
     return ret;
 }
@@ -369,9 +366,8 @@ esp_err_t lcd_i2c_direita_para_esquerda(lcd_i2c_t* lcd_i2c) {
 esp_err_t lcd_i2c_rolagem_automatica(lcd_i2c_t* lcd_i2c, bool enable) {
     esp_err_t ret = ESP_FAIL;
     if (lcd_i2c_confirmar_init(lcd_i2c)) {
-        lcd_i2c->entry_mode_flags =
-            lcd_i2c_config_flag(lcd_i2c->entry_mode_flags, enable, FLAG_SHIFT_ON);
-        ret = lcd_i2c_enviar_cmd(lcd_i2c, CMD_MODO_CONFIG | lcd_i2c->entry_mode_flags);
+        lcd_i2c->modo_entrada = lcd_i2c_config_flag(lcd_i2c->modo_entrada, enable, FLAG_SHIFT_ON);
+        ret = lcd_i2c_enviar_cmd(lcd_i2c, CMD_MODO_CONFIG | lcd_i2c->modo_entrada);
     }
     return ret;
 }
