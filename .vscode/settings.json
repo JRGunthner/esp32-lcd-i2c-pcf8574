@@ -41,6 +41,9 @@
         "types.h": "c",
         "random": "c",
         "queue": "c",
-        "i2c.h": "c"
+        "i2c.h": "c",
+        "coroutine": "c",
+        "xmemory": "c",
+        "ios": "c"
     }
 }

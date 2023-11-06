@@ -10,14 +10,14 @@ extern "C" {
 
 typedef struct {
     bool init;                      // True se o display foi inicializado
-    smbus_info_t* smbus_info;       // Ponteiro para a estrutura smbus_info
-    uint8_t backlight_flag;         // Backlight habilitado (1), desabilitado (0)
-    uint8_t num_rows;               // Nuúmero de linhas
-    uint8_t num_columns;            // Número de células totais, incluindo as não visíveis
-    uint8_t num_visible_columns;    // Número de colunas
+    smbus_t* smbus;                 // Ponteiro para a estrutura smbus
+    uint8_t backlight;              // Backlight habilitado (1), desabilitado (0)
+    uint8_t num_linhas;             // Número de linhas
+    uint8_t num_colunas;            // Número de colunas
+    uint8_t num_celulas;            // Número de células totais, incluindo as não visíveis
     uint8_t display_control_flags;  // Atividade atual do controle do display
     uint8_t entry_mode_flags;       // modo de entrada ativo atual
-} i2c_lcd1602_info_t;
+} lcd_i2c_t;
 
 // Caracteres especiais customizados para o código ROM A00
 // Use o segundo conjunto (0bxxxx1xxx) para evitar colocar o caractere nulo dentro de uma string
@@ -57,7 +57,7 @@ typedef enum {
     I2C_LCD1602_INDEX_CUSTOM_7,
 } i2c_lcd1602_custom_index_t;
 
-#define I2C_LCD1602_ERROR_CHECK(x)                                         \
+#define LCD_I2C_ERROR_CHECK(x)                                         \
     do {                                                                   \
         esp_err_t rc = (x);                                                \
         if (rc != ESP_OK) {                                                \
@@ -70,119 +70,119 @@ typedef enum {
  *        A nova instância deve ser inicializada antes de chamar outras funções.
  * @return Ponteiro para a nova instância de I2C-LCD info, ou NULL se não puder ser criada
  */
-i2c_lcd1602_info_t* lcd_i2c_malloc(void);
+lcd_i2c_t* lcd_i2c_malloc(void);
 
 /**
  * @brief Destrutor de uma instância de I2C-LCD info.
- * @param[in,out] i2c_lcd1602_info Ponteiro para a instância de I2C-LCD info que
- *                                 será destruída e definida como NULL.
+ * @param[in,out] lcd_i2c Ponteiro para a instância de I2C-LCD info que
+ *                        será destruída e definida como NULL.
  */
-void lcd_i2c_free(i2c_lcd1602_info_t** tsl2561_info);
+void lcd_i2c_free(lcd_i2c_t** lcd_i2c);
 
 /**
  * @brief Inicializa uma instância de I2C-LCD info com as informações SMBus.
- * @param[in] i2c_lcd1602_info Ponteiro para a instância de I2C-LCD info.
- * @param[in] smbus_info Ponteiro para a instância de SMBus info.
- * @param[in] backlight Estado inicial do backlight.
- * @param[in] num_rows Número máximo de linhas suportadas para este dispositivo.
+ * @param[in] lcd_i2c Ponteiro para a instância de I2C-LCD info.
+ * @param[in] smbus            Ponteiro para a instância de SMBus info.
+ * @param[in] backlight        Estado inicial do backlight.
+ * @param[in] num_linhas Número máximo de linhas suportadas para este dispositivo.
  *                     Valores típicos incluem 2 (1602) ou 4 (2004).
- * @param[in] num_columns Número máximo de colunas suportadas para este dispositivo.
+ * @param[in] num_celulas Número máximo de colunas suportadas para este dispositivo.
  *                        Valores típicos incluem 32 (1602) ou 80 (2004).
- * @param[in] num_visible_columns Número de colunas visíveis em qualquer momento.
+ * @param[in] num_colunas Número de colunas visíveis em qualquer momento.
  *                               Valores típicos incluem 16 (1602) ou 20 (2004).
  * @return ESP_OK se bem sucedido, caso contrário, uma constante de erro.
  */
-esp_err_t lcd_i2c_init(i2c_lcd1602_info_t* i2c_lcd1602_info, smbus_info_t* smbus_info, bool backlight, uint8_t num_rows,
-                       uint8_t num_columns, uint8_t num_visible_columns);
+esp_err_t lcd_i2c_init(lcd_i2c_t* lcd_i2c, smbus_t* smbus, bool backlight, uint8_t num_linhas,
+                       uint8_t num_celulas, uint8_t num_colunas);
 
 /**
  * @brief Reset LCD. Os caracteres customizados serão apagados.
- * @param[in] i2c_lcd1602_info Ponteiro para a instância de I2C-LCD info.
+ * @param[in] lcd_i2c Ponteiro para a instância de I2C-LCD info.
  * @return ESP_OK se bem sucedido, caso contrário, uma constante de erro.
  */
-esp_err_t lcd_i2c_init_config(const i2c_lcd1602_info_t* i2c_lcd1602_info);
+esp_err_t lcd_i2c_init_config(const lcd_i2c_t* lcd_i2c);
 
 /**
  * @brief Limpa todo o display (limpa DDRAM) e retorna o cursor para a posição inicial.
  * O conteúdo do DGRAM é apaga, o conteúdo do CGRAM não é alterado.
- * @param[in] i2c_lcd1602_info Ponteiro para a instância de I2C-LCD info.
+ * @param[in] lcd_i2c Ponteiro para a instância de I2C-LCD info.
  * @return ESP_OK se bem sucedido, caso contrário, uma constante de erro.
  */
-esp_err_t lcd_i2c_limpar_display(const i2c_lcd1602_info_t* i2c_lcd1602_info);
+esp_err_t lcd_i2c_limpar_display(const lcd_i2c_t* lcd_i2c);
 
 /**
  * @brief Move o cursor para a posição inicial. Também redefine qualquer deslocamento de exibição que possa ter
  * ocorrido. Os conteúdos do DGRAM e do CGRAM não são alterados.
- * @param[in] i2c_lcd1602_info Ponteiro para a instância de I2C-LCD info.
+ * @param[in] lcd_i2c Ponteiro para a instância de I2C-LCD info.
  * @return ESP_OK se bem sucedido, caso contrário, uma constante de erro.
  */
-esp_err_t lcd_i2c_retornar_inicio(const i2c_lcd1602_info_t* i2c_lcd1602_info);
+esp_err_t lcd_i2c_retornar_inicio(const lcd_i2c_t* lcd_i2c);
 
 /**
  * @brief Move o cursor para uma coluna e linha específicas.
  * Isso é onde um novo caractere aparecerá.
- * @param[in] i2c_lcd1602_info Ponteiro para a instância de I2C-LCD info.
+ * @param[in] lcd_i2c Ponteiro para a instância de I2C-LCD info.
  * @param[in] col Índice da coluna para mover o cursor. A coluna 0 é a coluna mais à esquerda.
  * @param[in] row Índice da linha para mover o cursor. A linha 0 é a linha superior.
  * @return ESP_OK se bem sucedido, caso contrário, uma constante de erro.
  */
-esp_err_t lcd_i2c_mover_cursor(const i2c_lcd1602_info_t* i2c_lcd1602_info, uint8_t col, uint8_t row);
+esp_err_t lcd_i2c_mover_cursor(const lcd_i2c_t* lcd_i2c, uint8_t col, uint8_t row);
 
 /**
  * @brief Habilita ou desabilita o backlight do display.
- * @param[in] i2c_lcd1602_info Ponteiro para a instância de I2C-LCD info.
+ * @param[in] lcd_i2c Ponteiro para a instância de I2C-LCD info.
  * @param[in] enable True para habilitar, false para desabilitar.
  * @return ESP_OK se bem sucedido, caso contrário, uma constante de erro.
  */
-esp_err_t lcd_i2c_backlight(i2c_lcd1602_info_t* i2c_lcd1602_info, bool enable);
+esp_err_t lcd_i2c_backlight(lcd_i2c_t* lcd_i2c, bool enable);
 
 /**
  * @brief Ativa ou desativa a exibição.
  * Quando desabilitada, a luz de fundo não é afetada, mas nenhum conteúdo
  * da DDRAM é exibido, nem o cursor. O display estará "em branco".
  * A reativação da exibição não afeta o conteúdo da DDRAM ou o estado ou posição do cursor.
- * @param[in] i2c_lcd1602_info Ponteiro para a instância de I2C-LCD info.
+ * @param[in] lcd_i2c Ponteiro para a instância de I2C-LCD info.
  * @param[in] enable True para habilitar, false para desabilitar.
  * @return ESP_OK se bem sucedido, caso contrário, uma constante de erro.
  */
-esp_err_t lcd_i2c_habilita_display(i2c_lcd1602_info_t* i2c_lcd1602_info, bool enable);
+esp_err_t lcd_i2c_habilita_display(lcd_i2c_t* lcd_i2c, bool enable);
 
 /**
  * @brief Habilita ou desabilita a exibição do cursor sublinhado.
  * Se ativado, indica visualmente onde o próximo caractere escrito no display aparecerá.
  * Pode ser habilitado junto com o cursor piscando.
- * @param[in] i2c_lcd1602_info Ponteiro para a instância de I2C-LCD info.
+ * @param[in] lcd_i2c Ponteiro para a instância de I2C-LCD info.
  * @param[in] enable True para habilitar, false para desabilitar.
  * @return ESP_OK se bem sucedido, caso contrário, uma constante de erro.
  */
-esp_err_t lcd_i2c_config_cursor(i2c_lcd1602_info_t* i2c_lcd1602_info, bool enable);
+esp_err_t lcd_i2c_config_cursor(lcd_i2c_t* lcd_i2c, bool enable);
 
 /**
  * @brief Ativa ou desativa a exibição do cursor de bloco piscante.
  * Se ativado, indica visualmente onde o próximo caractere escrito no display aparecerá.
  * Pode ser habilitado junto com o cursor sublinhado.
- * @param[in] i2c_lcd1602_info Ponteiro para a instância de I2C-LCD info.
+ * @param[in] lcd_i2c Ponteiro para a instância de I2C-LCD info.
  * @param[in] enable True para habilitar, false para desabilitar.
  * @return ESP_OK se bem sucedido, caso contrário, uma constante de erro.
  */
-esp_err_t lcd_i2c_config_cursor_piscante(i2c_lcd1602_info_t* i2c_lcd1602_info, bool enable);
+esp_err_t lcd_i2c_config_cursor_piscante(lcd_i2c_t* lcd_i2c, bool enable);
 
 /**
  *
  * @brief Define a direção do movimento do cursor após a escrita de cada caractere.
  * O texto será escrito da esquerda para a direita.
- * @param[in] i2c_lcd1602_info Ponteiro para a instância de I2C-LCD info.
+ * @param[in] lcd_i2c Ponteiro para a instância de I2C-LCD info.
  * @return ESP_OK se bem sucedido, caso contrário, uma constante de erro.
  */
-esp_err_t lcd_i2c_esquerda_para_direita(i2c_lcd1602_info_t* i2c_lcd1602_info);
+esp_err_t lcd_i2c_esquerda_para_direita(lcd_i2c_t* lcd_i2c);
 
 /**
  * @brief Define a direção do movimento do cursor após a escrita de cada caractere.
  * O texto será escrito da direita para a esquerda.
- * @param[in] i2c_lcd1602_info Ponteiro para a instância de I2C-LCD info.
+ * @param[in] lcd_i2c Ponteiro para a instância de I2C-LCD info.
  * @return ESP_OK se bem sucedido, caso contrário, uma constante de erro.
  */
-esp_err_t lcd_i2c_direita_para_esquerda(i2c_lcd1602_info_t* i2c_lcd1602_info);
+esp_err_t lcd_i2c_direita_para_esquerda(lcd_i2c_t* lcd_i2c);
 
 /**
  * @brief Habilita ou desabilita a rolagem automática da tela.
@@ -191,43 +191,43 @@ esp_err_t lcd_i2c_direita_para_esquerda(i2c_lcd1602_info_t* i2c_lcd1602_info);
  * O texto da esquerda para a direita aparecerá justificado à direita da posição do cursor.
  * Quando desativado, o display não rolará e o cursor se moverá na tela.
  * O texto da direita para a esquerda aparecerá justificado à esquerda da posição do cursor.
- * @param[in] i2c_lcd1602_info Ponteiro para a instância de I2C-LCD info.
+ * @param[in] lcd_i2c Ponteiro para a instância de I2C-LCD info.
  * @param[in] enable True para habilitar, false para desabilitar.
  * @return ESP_OK se bem sucedido, caso contrário, uma constante de erro.
  */
-esp_err_t lcd_i2c_rolagem_automatica(i2c_lcd1602_info_t* i2c_lcd1602_info, bool enable);
+esp_err_t lcd_i2c_rolagem_automatica(lcd_i2c_t* lcd_i2c, bool enable);
 
 /**
  * @brief Rola o display uma posição para a esquerda.
  * O texto na tela parecerá se mover para a direita.
- * @param[in] i2c_lcd1602_info Ponteiro para a instância de I2C-LCD info.
+ * @param[in] lcd_i2c Ponteiro para a instância de I2C-LCD info.
  * @return ESP_OK se bem sucedido, caso contrário, uma constante de erro.
  */
-esp_err_t lcd_i2c_rolagem_esquerda(const i2c_lcd1602_info_t* i2c_lcd1602_info);
+esp_err_t lcd_i2c_rolagem_esquerda(const lcd_i2c_t* lcd_i2c);
 
 /**
  * @brief Rola o display uma posição para a direita.
  * O texto na tela parecerá se mover para a esquerda.
- * @param[in] i2c_lcd1602_info Ponteiro para a instância de I2C-LCD info.
+ * @param[in] lcd_i2c Ponteiro para a instância de I2C-LCD info.
  * @return ESP_OK se bem sucedido, caso contrário, uma constante de erro.
  */
-esp_err_t lcd_i2c_rolagem_direita(const i2c_lcd1602_info_t* i2c_lcd1602_info);
+esp_err_t lcd_i2c_rolagem_direita(const lcd_i2c_t* lcd_i2c);
 
 /**
  * @brief Move o cursor uma posição para a esquerda, mesmo que esteja invisível.
  * Isso afeta onde o próximo caractere escrito no display aparecerá.
- * @param[in] i2c_lcd1602_info Ponteiro para a instância de I2C-LCD info.
+ * @param[in] lcd_i2c Ponteiro para a instância de I2C-LCD info.
  * @return ESP_OK se bem sucedido, caso contrário, uma constante de erro.
  */
-esp_err_t lcd_i2c_mover_cursor_esquerda(const i2c_lcd1602_info_t* i2c_lcd1602_info);
+esp_err_t lcd_i2c_mover_cursor_esquerda(const lcd_i2c_t* lcd_i2c);
 
 /**
  * @brief Move o cursor uma posição para a direita, mesmo que esteja invisível.
  * Isso afeta onde o próximo caractere escrito no display aparecerá.
- * @param[in] i2c_lcd1602_info Ponteiro para a instância de I2C-LCD info.
+ * @param[in] lcd_i2c Ponteiro para a instância de I2C-LCD info.
  * @return ESP_OK se bem sucedido, caso contrário, uma constante de erro.
  */
-esp_err_t lcd_i2c_mover_cursor_direita(const i2c_lcd1602_info_t* i2c_lcd1602_info);
+esp_err_t lcd_i2c_mover_cursor_direita(const lcd_i2c_t* lcd_i2c);
 
 /**
  * @brief Define um caractere personalizado a partir de um mapa de pixels.
@@ -248,12 +248,12 @@ esp_err_t lcd_i2c_mover_cursor_direita(const i2c_lcd1602_info_t* i2c_lcd1602_inf
  *
  * Os caracteres personalizados são gravados usando as definições I2C_LCD1602_CHARACTER_CUSTOM_X.
  *
- * @param[in] i2c_lcd1602_info Ponteiro para a instância de I2C-LCD info.
+ * @param[in] lcd_i2c Ponteiro para a instância de I2C-LCD info.
  * @param[in] index Índice baseado em zero do caractere a ser definido. Somente os valores 0-7 são válidos.
  * @param[in] pixelmap Uma matriz de 8 bytes definindo o mapa de pixels para a nova definição de caractere.
  * @return ESP_OK se bem sucedido, caso contrário, uma constante de erro.
  */
-esp_err_t lcd_i2c_caracter_personalizado(const i2c_lcd1602_info_t* i2c_lcd1602_info, i2c_lcd1602_custom_index_t index,
+esp_err_t lcd_i2c_caracter_personalizado(const lcd_i2c_t* lcd_i2c, i2c_lcd1602_custom_index_t index,
                                          const uint8_t pixelmap[]);
 
 /**
@@ -267,10 +267,10 @@ esp_err_t lcd_i2c_caracter_personalizado(const i2c_lcd1602_info_t* i2c_lcd1602_i
  * da primeira linha, o cursor se moverá automaticamente para o início
  * da segunda linha.
  *
- * @param[in] i2c_lcd1602_info Ponteiro para a instância de I2C-LCD info.
+ * @param[in] lcd_i2c Ponteiro para a instância de I2C-LCD info.
  * @return ESP_OK se bem sucedido, caso contrário, uma constante de erro.
  */
-esp_err_t lcd_i2c_print_char(const i2c_lcd1602_info_t* i2c_lcd1602_info, uint8_t chr);
+esp_err_t lcd_i2c_print_char(const lcd_i2c_t* lcd_i2c, uint8_t chr);
 
 /**
  * @brief Escreve uma sequência de caracteres no display, começando na posição atual do cursor.
@@ -281,10 +281,10 @@ esp_err_t lcd_i2c_print_char(const i2c_lcd1602_info_t* i2c_lcd1602_info, uint8_t
  * da primeira linha, o cursor se moverá automaticamente para o início
  * da segunda linha.
  *
- * @param[in] i2c_lcd1602_info Ponteiro para a instância de I2C-LCD info.
+ * @param[in] lcd_i2c Ponteiro para a instância de I2C-LCD info.
  * @return ESP_OK se bem sucedido, caso contrário, uma constante de erro.
  */
-esp_err_t lcd_i2c_printf(const i2c_lcd1602_info_t* i2c_lcd1602_info, const char* string);
+esp_err_t lcd_i2c_printf(const lcd_i2c_t* lcd_i2c, const char* string);
 
 #ifdef __cplusplus
 }

@@ -11,7 +11,7 @@
 #include "smbus.h"
 #include "lcd-i2c.h"
 
-#define TAG "MAIN"
+#define TAG              "MAIN"
 
 #define I2C_MASTER_SCL   GPIO_NUM_2
 #define I2C_MASTER_SDA   GPIO_NUM_1
@@ -29,11 +29,11 @@
 
 // Utiliza stdin para aguardar o usuario pressionar uma tecla
 // Se desabilitado, aguarda 1 segundo
-#define USE_STDIN 1
+#define USE_STDIN             1
 
 #define I2C_MASTER_NUM        I2C_NUM_0
-#define I2C_MASTER_TX_BUF_LEN 0 // Desabilitado
-#define I2C_MASTER_RX_BUF_LEN 0 // Desabilitado
+#define I2C_MASTER_TX_BUF_LEN 0  // Desabilitado
+#define I2C_MASTER_RX_BUF_LEN 0  // Desabilitado
 #define I2C_MASTER_FREQ_HZ    100000
 #define I2C_MASTER_SDA_IO     I2C_MASTER_SDA
 #define I2C_MASTER_SCL_IO     I2C_MASTER_SCL
@@ -41,14 +41,12 @@
 static void i2c_master_init(void) {
     int i2c_master_port = I2C_MASTER_NUM;
 
-    i2c_config_t conf = {
-        .mode               = I2C_MODE_MASTER,
-        .sda_io_num         = I2C_MASTER_SDA_IO,
-        .scl_io_num         = I2C_MASTER_SCL_IO,
-        .sda_pullup_en      = GPIO_PULLUP_ENABLE,
-        .scl_pullup_en      = GPIO_PULLUP_ENABLE,
-        .master.clk_speed   = I2C_MASTER_FREQ_HZ
-    };
+    i2c_config_t conf = {.mode = I2C_MODE_MASTER,
+                         .sda_io_num = I2C_MASTER_SDA_IO,
+                         .scl_io_num = I2C_MASTER_SCL_IO,
+                         .sda_pullup_en = GPIO_PULLUP_ENABLE,
+                         .scl_pullup_en = GPIO_PULLUP_ENABLE,
+                         .master.clk_speed = I2C_MASTER_FREQ_HZ};
 
     i2c_param_config(i2c_master_port, &conf);
     i2c_driver_install(i2c_master_port, conf.mode, I2C_MASTER_RX_BUF_LEN, I2C_MASTER_TX_BUF_LEN, 0);
@@ -77,13 +75,13 @@ void vLcdTask(void* pvParameter) {
     uint8_t address = LCD_I2C_ENDERECO;
 
     // Inicializa SMBus
-    smbus_info_t* smbus_info = smbus_malloc();
-    ESP_ERROR_CHECK(smbus_init(smbus_info, i2c_num, address));
-    ESP_ERROR_CHECK(smbus_set_timeout(smbus_info, 1000 / portTICK_RATE_MS));
+    smbus_t* smbus = smbus_malloc();
+    ESP_ERROR_CHECK(smbus_init(smbus, i2c_num, address));
+    ESP_ERROR_CHECK(smbus_set_timeout(smbus, 1000 / portTICK_RATE_MS));
 
     // Inicializa o LCD com backlight desligado
-    i2c_lcd1602_info_t* lcd_info = lcd_i2c_malloc();
-    ESP_ERROR_CHECK(lcd_i2c_init(lcd_info, smbus_info, true, LCD_NUM_LINHAS, LCD_NUM_CELULAS, LCD_NUM_COLUNAS));
+    lcd_i2c_t* lcd_info = lcd_i2c_malloc();
+    ESP_ERROR_CHECK(lcd_i2c_init(lcd_info, smbus, true, LCD_NUM_LINHAS, LCD_NUM_CELULAS, LCD_NUM_COLUNAS));
 
     ESP_ERROR_CHECK(lcd_i2c_init_config(lcd_info));
 

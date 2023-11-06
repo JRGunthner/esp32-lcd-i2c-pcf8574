@@ -70,16 +70,16 @@
 #define FLAG_RS_CMD         0b00000000  // comando
 
 // Verifica inicialização
-static bool lcd_i2c_confirmar_init(const i2c_lcd1602_info_t* i2c_lcd1602_info) {
+static bool lcd_i2c_confirmar_init(const lcd_i2c_t* lcd_i2c) {
     bool ok = false;
-    if (i2c_lcd1602_info != NULL) {
-        if (i2c_lcd1602_info->init) {
+    if (lcd_i2c != NULL) {
+        if (lcd_i2c->init) {
             ok = true;
         } else {
-            ESP_LOGE(TAG, "i2c_lcd1602_info nao foi inicializado");
+            ESP_LOGE(TAG, "lcd_i2c nao foi inicializado");
         }
     } else {
-        ESP_LOGE(TAG, "i2c_lcd1602_info eh NULL");
+        ESP_LOGE(TAG, "lcd_i2c=NULL");
     }
     return ok;
 }
@@ -95,111 +95,109 @@ static uint8_t lcd_i2c_config_flag(uint8_t flags, bool condicao, uint8_t flag) {
 }
 
 // Envia dados para o expansor de I/O
-static esp_err_t lcd_i2c_pcf8574_enviar(const i2c_lcd1602_info_t* i2c_lcd1602_info, uint8_t data) {
+static esp_err_t lcd_i2c_pcf8574_enviar(const lcd_i2c_t* lcd_i2c, uint8_t data) {
     // backlight flag must be included with every write to maintain backlight state
-    ESP_LOGD(TAG, "lcd_i2c_pcf8574_enviar 0x%02x", data | i2c_lcd1602_info->backlight_flag);
-    return smbus_enviar_byte(i2c_lcd1602_info->smbus_info, data | i2c_lcd1602_info->backlight_flag);
+    ESP_LOGD(TAG, "lcd_i2c_pcf8574_enviar 0x%02x", data | lcd_i2c->backlight);
+    return smbus_enviar_byte(lcd_i2c->smbus, data | lcd_i2c->backlight);
 }
 
 // IMPORTANTE - para que o display fique "em sincronia" é importante
 // que os erros não interrompam a sequência de 2 x nibble.
 
-// Dados do clock do PFC8574 para o LCD, causando uma borda descendente em Ativar
-static esp_err_t lcd_i2c_pcf8574_ajusta_clock(const i2c_lcd1602_info_t* i2c_lcd1602_info, uint8_t data) {
-    esp_err_t err1 = lcd_i2c_pcf8574_enviar(i2c_lcd1602_info, data | FLAG_PINO_EN);
+// Sincroziza o PFC8574 com o LCD, causando uma borda descendente no pino EN
+static esp_err_t lcd_i2c_pcf8574_ajusta_clock(const lcd_i2c_t* lcd_i2c, uint8_t data) {
+    esp_err_t err1 = lcd_i2c_pcf8574_enviar(lcd_i2c, data | FLAG_PINO_EN);
     ets_delay_us(DELAY_HABILITA_LARGURA_PULSO);
-    esp_err_t err2 = lcd_i2c_pcf8574_enviar(i2c_lcd1602_info, data & ~FLAG_PINO_EN);
+    esp_err_t err2 = lcd_i2c_pcf8574_enviar(lcd_i2c, data & ~FLAG_PINO_EN);
     ets_delay_us(DELAY_HABILITA_AJUSTE_PULSO);
     return err1 ? err1 : err2;
 }
 
 // Envia um nibble alto para o controlador LCD
-static esp_err_t lcd_i2c_pcf8574_enviar_nibble(const i2c_lcd1602_info_t* i2c_lcd1602_info, uint8_t data) {
+static esp_err_t lcd_i2c_pcf8574_enviar_nibble(const lcd_i2c_t* lcd_i2c, uint8_t data) {
     ESP_LOGD(TAG, "lcd_i2c_pcf8574_enviar_nibble 0x%02x", data);
-    esp_err_t err1 = lcd_i2c_pcf8574_enviar(i2c_lcd1602_info, data);
-    esp_err_t err2 = lcd_i2c_pcf8574_ajusta_clock(i2c_lcd1602_info, data);
+    esp_err_t err1 = lcd_i2c_pcf8574_enviar(lcd_i2c, data);
+    esp_err_t err2 = lcd_i2c_pcf8574_ajusta_clock(lcd_i2c, data);
     return err1 ? err1 : err2;
 }
 
 // Envia um comando para o I2C
-static esp_err_t lcd_i2c_enviar(const i2c_lcd1602_info_t* i2c_lcd1602_info, uint8_t value,
-                                uint8_t register_select_flag) {
+static esp_err_t lcd_i2c_enviar(const lcd_i2c_t* lcd_i2c, uint8_t value, uint8_t register_select_flag) {
     ESP_LOGD(TAG, "lcd_i2c_enviar 0x%02x | 0x%02x", value, register_select_flag);
-    esp_err_t err1 = lcd_i2c_pcf8574_enviar_nibble(i2c_lcd1602_info, (value & 0xf0) | register_select_flag);
-    esp_err_t err2 = lcd_i2c_pcf8574_enviar_nibble(i2c_lcd1602_info, ((value & 0x0f) << 4) | register_select_flag);
+    esp_err_t err1 = lcd_i2c_pcf8574_enviar_nibble(lcd_i2c, (value & 0xf0) | register_select_flag);
+    esp_err_t err2 = lcd_i2c_pcf8574_enviar_nibble(lcd_i2c, ((value & 0x0f) << 4) | register_select_flag);
     return err1 ? err1 : err2;
 }
 
 // Envia um comando para o LCD
-static esp_err_t lcd_i2c_enviar_cmd(const i2c_lcd1602_info_t* i2c_lcd1602_info, uint8_t command) {
+static esp_err_t lcd_i2c_enviar_cmd(const lcd_i2c_t* lcd_i2c, uint8_t command) {
     ESP_LOGD(TAG, "lcd_i2c_enviar_cmd 0x%02x", command);
-    return lcd_i2c_enviar(i2c_lcd1602_info, command, FLAG_RS_CMD);
+    return lcd_i2c_enviar(lcd_i2c, command, FLAG_RS_CMD);
 }
 
 // Envia um dado para o I2C
-static esp_err_t lcd_i2c_enviar_dado(const i2c_lcd1602_info_t* i2c_lcd1602_info, uint8_t data) {
+static esp_err_t lcd_i2c_enviar_dado(const lcd_i2c_t* lcd_i2c, uint8_t data) {
     ESP_LOGD(TAG, "lcd_i2c_enviar_dado 0x%02x", data);
-    return lcd_i2c_enviar(i2c_lcd1602_info, data, FLAG_RS_DADO);
+    return lcd_i2c_enviar(lcd_i2c, data, FLAG_RS_DADO);
 }
 
-i2c_lcd1602_info_t* lcd_i2c_malloc(void) {
-    i2c_lcd1602_info_t* i2c_lcd1602_info = malloc(sizeof(*i2c_lcd1602_info));
-    if (i2c_lcd1602_info != NULL) {
-        memset(i2c_lcd1602_info, 0, sizeof(*i2c_lcd1602_info));
-        ESP_LOGD(TAG, "malloc i2c_lcd1602_info_t %p", i2c_lcd1602_info);
+lcd_i2c_t* lcd_i2c_malloc(void) {
+    lcd_i2c_t* lcd_i2c = malloc(sizeof(*lcd_i2c));
+    if (lcd_i2c != NULL) {
+        memset(lcd_i2c, 0, sizeof(*lcd_i2c));
+        ESP_LOGD(TAG, "malloc lcd_i2c_t %p", lcd_i2c);
     } else {
-        ESP_LOGE(TAG, "malloc i2c_lcd1602_info_t falhou");
+        ESP_LOGE(TAG, "malloc lcd_i2c_t falhou");
     }
-    return i2c_lcd1602_info;
+    return lcd_i2c;
 }
 
-void lcd_i2c_free(i2c_lcd1602_info_t** i2c_lcd1602_info) {
-    if (i2c_lcd1602_info != NULL && (*i2c_lcd1602_info != NULL)) {
-        ESP_LOGD(TAG, "free i2c_lcd1602_info_t %p", *i2c_lcd1602_info);
-        free(*i2c_lcd1602_info);
-        *i2c_lcd1602_info = NULL;
+void lcd_i2c_free(lcd_i2c_t** lcd_i2c) {
+    if (lcd_i2c != NULL && (*lcd_i2c != NULL)) {
+        ESP_LOGD(TAG, "free lcd_i2c_t %p", *lcd_i2c);
+        free(*lcd_i2c);
+        *lcd_i2c = NULL;
     } else {
-        ESP_LOGE(TAG, "free i2c_lcd1602_info_t falhou");
+        ESP_LOGE(TAG, "free lcd_i2c_t falhou");
     }
 }
 
-esp_err_t lcd_i2c_init(i2c_lcd1602_info_t* i2c_lcd1602_info, smbus_info_t* smbus_info, bool backlight, uint8_t num_rows,
-                       uint8_t num_columns, uint8_t num_visible_columns) {
+// Procedimento de inicialização na pagina 45/46 do datasheet do HD44780.
+esp_err_t lcd_i2c_init(lcd_i2c_t* lcd_i2c, smbus_t* smbus, bool backlight, uint8_t num_linhas,
+                       uint8_t num_celulas, uint8_t num_colunas) {
     esp_err_t ret = ESP_FAIL;
-    if (i2c_lcd1602_info != NULL) {
-        i2c_lcd1602_info->smbus_info = smbus_info;
-        i2c_lcd1602_info->backlight_flag = backlight ? FLAG_BACKLIGHT_LIGA : FLAG_BACKLIGHT_DESL;
-        i2c_lcd1602_info->num_rows = num_rows;
-        i2c_lcd1602_info->num_columns = num_columns;
-        i2c_lcd1602_info->num_visible_columns = num_visible_columns;
+    if (lcd_i2c != NULL) {
+        lcd_i2c->smbus = smbus;
+        lcd_i2c->backlight = backlight ? FLAG_BACKLIGHT_LIGA : FLAG_BACKLIGHT_DESL;
+        lcd_i2c->num_linhas = num_linhas;
+        lcd_i2c->num_celulas = num_celulas;
+        lcd_i2c->num_colunas = num_colunas;
 
         // display ligado, sem cursor, sem cursor piscante
-        i2c_lcd1602_info->display_control_flags = FLAG_DISPLAY_ON | FLAG_CURSOR_OFF | FLAG_BLINK_OFF;
+        lcd_i2c->display_control_flags = FLAG_DISPLAY_ON | FLAG_CURSOR_OFF | FLAG_BLINK_OFF;
 
         // justificado à esquerda, texto da esquerda para a direita
-        i2c_lcd1602_info->entry_mode_flags = FLAG_INCREMENTA | FLAG_SHIFT_OFF;
+        lcd_i2c->entry_mode_flags = FLAG_INCREMENTA | FLAG_SHIFT_OFF;
 
-        i2c_lcd1602_info->init = true;
-
-        // Procedimento de inicialização na pagina 45/46 do datasheet do HD44780.
+        lcd_i2c->init = true;
 
         // Espera 40ms após VCC subir acima de 2,7V antes de enviar comandos.
         ets_delay_us(DELAY_POWER_ON);
 
-        ret = lcd_i2c_init_config(i2c_lcd1602_info);
+        ret = lcd_i2c_init_config(lcd_i2c);
     } else {
-        ESP_LOGE(TAG, "i2c_lcd1602_info eh NULL");
+        ESP_LOGE(TAG, "lcd_i2c=NULL");
         ret = ESP_FAIL;
     }
     return ret;
 }
 
-esp_err_t lcd_i2c_init_config(const i2c_lcd1602_info_t* i2c_lcd1602_info) {
+esp_err_t lcd_i2c_init_config(const lcd_i2c_t* lcd_i2c) {
     esp_err_t first_err = ESP_OK;
     esp_err_t last_err = ESP_FAIL;
 
     // Liga o LCD através do PCF8574 - pinos RS e RW em 0
-    if ((last_err = lcd_i2c_pcf8574_enviar(i2c_lcd1602_info, 0)) != ESP_OK) {
+    if ((last_err = lcd_i2c_pcf8574_enviar(lcd_i2c, 0)) != ESP_OK) {
         if (first_err == ESP_OK)
             first_err = last_err;
         ESP_LOGE(TAG, "reset: lcd_i2c_pcf8574_enviar 1 falhou: %d", last_err);
@@ -208,7 +206,7 @@ esp_err_t lcd_i2c_init_config(const i2c_lcd1602_info_t* i2c_lcd1602_info) {
 
     // Seleciona modo de 8 bits (pg 46, fig 24)
     // TODO: fazer um for para repetir 3 vezes
-    if ((last_err = lcd_i2c_pcf8574_enviar_nibble(i2c_lcd1602_info, 0x03 << 4)) != ESP_OK) {
+    if ((last_err = lcd_i2c_pcf8574_enviar_nibble(lcd_i2c, 0x03 << 4)) != ESP_OK) {
         if (first_err == ESP_OK)
             first_err = last_err;
         ESP_LOGE(TAG, "reset: lcd_i2c_pcf8574_enviar_nibble 1 falhou: %d", last_err);
@@ -216,7 +214,7 @@ esp_err_t lcd_i2c_init_config(const i2c_lcd1602_info_t* i2c_lcd1602_info) {
     ets_delay_us(DELAY_INIT_1);
 
     // Repete comando anterior
-    if ((last_err = lcd_i2c_pcf8574_enviar_nibble(i2c_lcd1602_info, 0x03 << 4)) != ESP_OK) {
+    if ((last_err = lcd_i2c_pcf8574_enviar_nibble(lcd_i2c, 0x03 << 4)) != ESP_OK) {
         if (first_err == ESP_OK)
             first_err = last_err;
         ESP_LOGE(TAG, "reset: lcd_i2c_pcf8574_enviar_nibble 2 failed: %d", last_err);
@@ -224,7 +222,7 @@ esp_err_t lcd_i2c_init_config(const i2c_lcd1602_info_t* i2c_lcd1602_info) {
     ets_delay_us(DELAY_INIT_2);
 
     // repete comando anterior
-    if ((last_err = lcd_i2c_pcf8574_enviar_nibble(i2c_lcd1602_info, 0x03 << 4)) != ESP_OK) {
+    if ((last_err = lcd_i2c_pcf8574_enviar_nibble(lcd_i2c, 0x03 << 4)) != ESP_OK) {
         if (first_err == ESP_OK)
             first_err = last_err;
         ESP_LOGE(TAG, "reset: lcd_i2c_pcf8574_enviar_nibble 3 failed: %d", last_err);
@@ -232,7 +230,7 @@ esp_err_t lcd_i2c_init_config(const i2c_lcd1602_info_t* i2c_lcd1602_info) {
     ets_delay_us(DELAY_INIT_3);
 
     // Seleciona modo de 4 bits
-    if ((last_err = lcd_i2c_pcf8574_enviar_nibble(i2c_lcd1602_info, 0x02 << 4)) != ESP_OK) {
+    if ((last_err = lcd_i2c_pcf8574_enviar_nibble(lcd_i2c, 0x02 << 4)) != ESP_OK) {
         if (first_err == ESP_OK)
             first_err = last_err;
         ESP_LOGE(TAG, "reset: lcd_i2c_pcf8574_enviar_nibble 4 failed: %d", last_err);
@@ -240,35 +238,35 @@ esp_err_t lcd_i2c_init_config(const i2c_lcd1602_info_t* i2c_lcd1602_info) {
 
     // Agora já podemos usar as funções command()/write()
 
-    last_err = lcd_i2c_enviar_cmd(i2c_lcd1602_info, CMD_CONFIGURAR | FLAG_MODO_4BIT | FLAG_2_LINHAS | FLAG_DOTS_5X8);
+    last_err = lcd_i2c_enviar_cmd(lcd_i2c, CMD_CONFIGURAR | FLAG_MODO_4BIT | FLAG_2_LINHAS | FLAG_DOTS_5X8);
     if (last_err != ESP_OK) {
         if (first_err == ESP_OK)
             first_err = last_err;
         ESP_LOGE(TAG, "reset: lcd_i2c_enviar_cmd 1 falhou: %d", last_err);
     }
 
-    last_err = lcd_i2c_enviar_cmd(i2c_lcd1602_info, CMD_CONTROLE_DISPLAY | i2c_lcd1602_info->display_control_flags);
+    last_err = lcd_i2c_enviar_cmd(lcd_i2c, CMD_CONTROLE_DISPLAY | lcd_i2c->display_control_flags);
     if (last_err != ESP_OK) {
         if (first_err == ESP_OK)
             first_err = last_err;
         ESP_LOGE(TAG, "reset: lcd_i2c_enviar_cmd 2 falhou: %d", last_err);
     }
 
-    last_err = lcd_i2c_limpar_display(i2c_lcd1602_info);
+    last_err = lcd_i2c_limpar_display(lcd_i2c);
     if (last_err != ESP_OK) {
         if (first_err == ESP_OK)
             first_err = last_err;
         ESP_LOGE(TAG, "reset: lcd_i2c_limpar_display falhou: %d", last_err);
     }
 
-    last_err = lcd_i2c_enviar_cmd(i2c_lcd1602_info, CMD_MODO_CONFIG | i2c_lcd1602_info->entry_mode_flags);
+    last_err = lcd_i2c_enviar_cmd(lcd_i2c, CMD_MODO_CONFIG | lcd_i2c->entry_mode_flags);
     if (last_err != ESP_OK) {
         if (first_err == ESP_OK)
             first_err = last_err;
         ESP_LOGE(TAG, "reset: lcd_i2c_enviar_cmd 3 falhou: %d", last_err);
     }
 
-    last_err = lcd_i2c_retornar_inicio(i2c_lcd1602_info);
+    last_err = lcd_i2c_retornar_inicio(lcd_i2c);
     if (last_err != ESP_OK) {
         if (first_err == ESP_OK)
             first_err = last_err;
@@ -278,172 +276,171 @@ esp_err_t lcd_i2c_init_config(const i2c_lcd1602_info_t* i2c_lcd1602_info) {
     return first_err;
 }
 
-esp_err_t lcd_i2c_limpar_display(const i2c_lcd1602_info_t* i2c_lcd1602_info) {
+esp_err_t lcd_i2c_limpar_display(const lcd_i2c_t* lcd_i2c) {
     esp_err_t ret = ESP_FAIL;
-    if (lcd_i2c_confirmar_init(i2c_lcd1602_info)) {
-        ret = lcd_i2c_enviar_cmd(i2c_lcd1602_info, CMD_LIMPAR_DISPLAY);
+    if (lcd_i2c_confirmar_init(lcd_i2c)) {
+        ret = lcd_i2c_enviar_cmd(lcd_i2c, CMD_LIMPAR_DISPLAY);
         if (ret == ESP_OK)
             ets_delay_us(DELAY_LIMPAR_DISPLAY);
     }
     return ret;
 }
 
-esp_err_t lcd_i2c_retornar_inicio(const i2c_lcd1602_info_t* i2c_lcd1602_info) {
+esp_err_t lcd_i2c_retornar_inicio(const lcd_i2c_t* lcd_i2c) {
     esp_err_t ret = ESP_FAIL;
-    if (lcd_i2c_confirmar_init(i2c_lcd1602_info)) {
-        ret = lcd_i2c_enviar_cmd(i2c_lcd1602_info, CMD_RETORNAR_INICIO);
+    if (lcd_i2c_confirmar_init(lcd_i2c)) {
+        ret = lcd_i2c_enviar_cmd(lcd_i2c, CMD_RETORNAR_INICIO);
         if (ret == ESP_OK)
             ets_delay_us(DELAY_RETORNA_INICIO);
     }
     return ret;
 }
 
-esp_err_t lcd_i2c_mover_cursor(const i2c_lcd1602_info_t* i2c_lcd1602_info, uint8_t col, uint8_t row) {
+esp_err_t lcd_i2c_mover_cursor(const lcd_i2c_t* lcd_i2c, uint8_t col, uint8_t row) {
     esp_err_t ret = ESP_FAIL;
-    if (lcd_i2c_confirmar_init(i2c_lcd1602_info)) {
+    if (lcd_i2c_confirmar_init(lcd_i2c)) {
         const int inicio_linha[] = {0x00, 0x40, 0x14, 0x54};
-        if (row > i2c_lcd1602_info->num_rows)
-            row = i2c_lcd1602_info->num_rows - 1;
-        if (col > i2c_lcd1602_info->num_columns)
-            col = i2c_lcd1602_info->num_columns - 1;
-        ret = lcd_i2c_enviar_cmd(i2c_lcd1602_info, CMD_CONFIG_DDRAM_ADDR | (col + inicio_linha[row]));
+        if (row > lcd_i2c->num_linhas)
+            row = lcd_i2c->num_linhas - 1;
+        if (col > lcd_i2c->num_celulas)
+            col = lcd_i2c->num_celulas - 1;
+        ret = lcd_i2c_enviar_cmd(lcd_i2c, CMD_CONFIG_DDRAM_ADDR | (col + inicio_linha[row]));
     }
     return ret;
 }
 
-esp_err_t lcd_i2c_backlight(i2c_lcd1602_info_t* i2c_lcd1602_info, bool enable) {
+esp_err_t lcd_i2c_backlight(lcd_i2c_t* lcd_i2c, bool enable) {
     esp_err_t ret = ESP_FAIL;
-    if (lcd_i2c_confirmar_init(i2c_lcd1602_info)) {
-        i2c_lcd1602_info->backlight_flag =
-            lcd_i2c_config_flag(i2c_lcd1602_info->backlight_flag, enable, FLAG_BACKLIGHT_LIGA);
-        ret = lcd_i2c_pcf8574_enviar(i2c_lcd1602_info, 0);
+    if (lcd_i2c_confirmar_init(lcd_i2c)) {
+        lcd_i2c->backlight = lcd_i2c_config_flag(lcd_i2c->backlight, enable, FLAG_BACKLIGHT_LIGA);
+        ret = lcd_i2c_pcf8574_enviar(lcd_i2c, 0);
     }
     return ret;
 }
 
-esp_err_t lcd_i2c_habilita_display(i2c_lcd1602_info_t* i2c_lcd1602_info, bool enable) {
+esp_err_t lcd_i2c_habilita_display(lcd_i2c_t* lcd_i2c, bool enable) {
     esp_err_t ret = ESP_FAIL;
-    if (lcd_i2c_confirmar_init(i2c_lcd1602_info)) {
-        i2c_lcd1602_info->display_control_flags =
-            lcd_i2c_config_flag(i2c_lcd1602_info->display_control_flags, enable, FLAG_DISPLAY_ON);
-        ret = lcd_i2c_enviar_cmd(i2c_lcd1602_info, CMD_CONTROLE_DISPLAY | i2c_lcd1602_info->display_control_flags);
+    if (lcd_i2c_confirmar_init(lcd_i2c)) {
+        lcd_i2c->display_control_flags =
+            lcd_i2c_config_flag(lcd_i2c->display_control_flags, enable, FLAG_DISPLAY_ON);
+        ret = lcd_i2c_enviar_cmd(lcd_i2c, CMD_CONTROLE_DISPLAY | lcd_i2c->display_control_flags);
     }
     return ret;
 }
 
-esp_err_t lcd_i2c_config_cursor(i2c_lcd1602_info_t* i2c_lcd1602_info, bool enable) {
+esp_err_t lcd_i2c_config_cursor(lcd_i2c_t* lcd_i2c, bool enable) {
     esp_err_t ret = ESP_FAIL;
-    if (lcd_i2c_confirmar_init(i2c_lcd1602_info)) {
-        i2c_lcd1602_info->display_control_flags =
-            lcd_i2c_config_flag(i2c_lcd1602_info->display_control_flags, enable, FLAG_CURSOR_ON);
-        ret = lcd_i2c_enviar_cmd(i2c_lcd1602_info, CMD_CONTROLE_DISPLAY | i2c_lcd1602_info->display_control_flags);
+    if (lcd_i2c_confirmar_init(lcd_i2c)) {
+        lcd_i2c->display_control_flags =
+            lcd_i2c_config_flag(lcd_i2c->display_control_flags, enable, FLAG_CURSOR_ON);
+        ret = lcd_i2c_enviar_cmd(lcd_i2c, CMD_CONTROLE_DISPLAY | lcd_i2c->display_control_flags);
     }
     return ret;
 }
 
-esp_err_t lcd_i2c_config_cursor_piscante(i2c_lcd1602_info_t* i2c_lcd1602_info, bool enable) {
+esp_err_t lcd_i2c_config_cursor_piscante(lcd_i2c_t* lcd_i2c, bool enable) {
     esp_err_t ret = ESP_FAIL;
-    if (lcd_i2c_confirmar_init(i2c_lcd1602_info)) {
-        i2c_lcd1602_info->display_control_flags =
-            lcd_i2c_config_flag(i2c_lcd1602_info->display_control_flags, enable, FLAG_BLINK_ON);
-        ret = lcd_i2c_enviar_cmd(i2c_lcd1602_info, CMD_CONTROLE_DISPLAY | i2c_lcd1602_info->display_control_flags);
+    if (lcd_i2c_confirmar_init(lcd_i2c)) {
+        lcd_i2c->display_control_flags =
+            lcd_i2c_config_flag(lcd_i2c->display_control_flags, enable, FLAG_BLINK_ON);
+        ret = lcd_i2c_enviar_cmd(lcd_i2c, CMD_CONTROLE_DISPLAY | lcd_i2c->display_control_flags);
     }
     return ret;
 }
 
-esp_err_t lcd_i2c_esquerda_para_direita(i2c_lcd1602_info_t* i2c_lcd1602_info) {
+esp_err_t lcd_i2c_esquerda_para_direita(lcd_i2c_t* lcd_i2c) {
     esp_err_t ret = ESP_FAIL;
-    if (lcd_i2c_confirmar_init(i2c_lcd1602_info)) {
-        i2c_lcd1602_info->entry_mode_flags |= FLAG_INCREMENTA;
-        ret = lcd_i2c_enviar_cmd(i2c_lcd1602_info, CMD_MODO_CONFIG | i2c_lcd1602_info->entry_mode_flags);
+    if (lcd_i2c_confirmar_init(lcd_i2c)) {
+        lcd_i2c->entry_mode_flags |= FLAG_INCREMENTA;
+        ret = lcd_i2c_enviar_cmd(lcd_i2c, CMD_MODO_CONFIG | lcd_i2c->entry_mode_flags);
     }
     return ret;
 }
 
-esp_err_t lcd_i2c_direita_para_esquerda(i2c_lcd1602_info_t* i2c_lcd1602_info) {
+esp_err_t lcd_i2c_direita_para_esquerda(lcd_i2c_t* lcd_i2c) {
     esp_err_t ret = ESP_FAIL;
-    if (lcd_i2c_confirmar_init(i2c_lcd1602_info)) {
-        i2c_lcd1602_info->entry_mode_flags &= ~FLAG_INCREMENTA;
-        ret = lcd_i2c_enviar_cmd(i2c_lcd1602_info, CMD_MODO_CONFIG | i2c_lcd1602_info->entry_mode_flags);
+    if (lcd_i2c_confirmar_init(lcd_i2c)) {
+        lcd_i2c->entry_mode_flags &= ~FLAG_INCREMENTA;
+        ret = lcd_i2c_enviar_cmd(lcd_i2c, CMD_MODO_CONFIG | lcd_i2c->entry_mode_flags);
     }
     return ret;
 }
 
-esp_err_t lcd_i2c_rolagem_automatica(i2c_lcd1602_info_t* i2c_lcd1602_info, bool enable) {
+esp_err_t lcd_i2c_rolagem_automatica(lcd_i2c_t* lcd_i2c, bool enable) {
     esp_err_t ret = ESP_FAIL;
-    if (lcd_i2c_confirmar_init(i2c_lcd1602_info)) {
-        i2c_lcd1602_info->entry_mode_flags =
-            lcd_i2c_config_flag(i2c_lcd1602_info->entry_mode_flags, enable, FLAG_SHIFT_ON);
-        ret = lcd_i2c_enviar_cmd(i2c_lcd1602_info, CMD_MODO_CONFIG | i2c_lcd1602_info->entry_mode_flags);
+    if (lcd_i2c_confirmar_init(lcd_i2c)) {
+        lcd_i2c->entry_mode_flags =
+            lcd_i2c_config_flag(lcd_i2c->entry_mode_flags, enable, FLAG_SHIFT_ON);
+        ret = lcd_i2c_enviar_cmd(lcd_i2c, CMD_MODO_CONFIG | lcd_i2c->entry_mode_flags);
     }
     return ret;
 }
 
-esp_err_t lcd_i2c_rolagem_esquerda(const i2c_lcd1602_info_t* i2c_lcd1602_info) {
+esp_err_t lcd_i2c_rolagem_esquerda(const lcd_i2c_t* lcd_i2c) {
     esp_err_t ret = ESP_FAIL;
-    if (lcd_i2c_confirmar_init(i2c_lcd1602_info)) {
+    if (lcd_i2c_confirmar_init(lcd_i2c)) {
         // RAM não é alterada
-        ret = lcd_i2c_enviar_cmd(i2c_lcd1602_info, CMD_SHIFT | FLAG_MOVER_DISPLAY | FLAG_MOVER_PARA_ESQUERDA);
+        ret = lcd_i2c_enviar_cmd(lcd_i2c, CMD_SHIFT | FLAG_MOVER_DISPLAY | FLAG_MOVER_PARA_ESQUERDA);
     }
     return ret;
 }
 
-esp_err_t lcd_i2c_rolagem_direita(const i2c_lcd1602_info_t* i2c_lcd1602_info) {
+esp_err_t lcd_i2c_rolagem_direita(const lcd_i2c_t* lcd_i2c) {
     esp_err_t ret = ESP_FAIL;
-    if (lcd_i2c_confirmar_init(i2c_lcd1602_info)) {
+    if (lcd_i2c_confirmar_init(lcd_i2c)) {
         // RAM não é alterada
-        ret = lcd_i2c_enviar_cmd(i2c_lcd1602_info, CMD_SHIFT | FLAG_MOVER_DISPLAY | FLAG_MOVER_PARA_DIREITA);
+        ret = lcd_i2c_enviar_cmd(lcd_i2c, CMD_SHIFT | FLAG_MOVER_DISPLAY | FLAG_MOVER_PARA_DIREITA);
     }
     return ret;
 }
 
-esp_err_t lcd_i2c_mover_cursor_esquerda(const i2c_lcd1602_info_t* i2c_lcd1602_info) {
+esp_err_t lcd_i2c_mover_cursor_esquerda(const lcd_i2c_t* lcd_i2c) {
     esp_err_t ret = ESP_FAIL;
-    if (lcd_i2c_confirmar_init(i2c_lcd1602_info)) {
+    if (lcd_i2c_confirmar_init(lcd_i2c)) {
         // RAM não é alterada. Direção do deslocamento é invertida.
-        ret = lcd_i2c_enviar_cmd(i2c_lcd1602_info, CMD_SHIFT | FLAG_MOVER_CURSOR | FLAG_MOVER_PARA_DIREITA);
+        ret = lcd_i2c_enviar_cmd(lcd_i2c, CMD_SHIFT | FLAG_MOVER_CURSOR | FLAG_MOVER_PARA_DIREITA);
     }
     return ret;
 }
 
-esp_err_t lcd_i2c_mover_cursor_direita(const i2c_lcd1602_info_t* i2c_lcd1602_info) {
+esp_err_t lcd_i2c_mover_cursor_direita(const lcd_i2c_t* lcd_i2c) {
     esp_err_t ret = ESP_FAIL;
-    if (lcd_i2c_confirmar_init(i2c_lcd1602_info)) {
+    if (lcd_i2c_confirmar_init(lcd_i2c)) {
         // RAM não é alterada. Direção do deslocamento é invertida.
-        ret = lcd_i2c_enviar_cmd(i2c_lcd1602_info, CMD_SHIFT | FLAG_MOVER_CURSOR | FLAG_MOVER_PARA_ESQUERDA);
+        ret = lcd_i2c_enviar_cmd(lcd_i2c, CMD_SHIFT | FLAG_MOVER_CURSOR | FLAG_MOVER_PARA_ESQUERDA);
     }
     return ret;
 }
 
-esp_err_t lcd_i2c_caracter_personalizado(const i2c_lcd1602_info_t* i2c_lcd1602_info, i2c_lcd1602_custom_index_t index,
+esp_err_t lcd_i2c_caracter_personalizado(const lcd_i2c_t* lcd_i2c, i2c_lcd1602_custom_index_t index,
                                          const uint8_t pixelmap[]) {
     esp_err_t ret = ESP_FAIL;
-    if (lcd_i2c_confirmar_init(i2c_lcd1602_info)) {
+    if (lcd_i2c_confirmar_init(lcd_i2c)) {
         // Somente os 8 primeiros índices podem ser usados para caracteres personalizados
         index &= 0x07;
-        ret = lcd_i2c_enviar_cmd(i2c_lcd1602_info, CMD_CONFIG_CGRAM_ADDR | (index << 3));
+        ret = lcd_i2c_enviar_cmd(lcd_i2c, CMD_CONFIG_CGRAM_ADDR | (index << 3));
         for (int i = 0; ret == ESP_OK && i < 8; ++i) {
-            ret = lcd_i2c_enviar_dado(i2c_lcd1602_info, pixelmap[i]);
+            ret = lcd_i2c_enviar_dado(lcd_i2c, pixelmap[i]);
         }
     }
     return ret;
 }
 
-esp_err_t lcd_i2c_print_char(const i2c_lcd1602_info_t* i2c_lcd1602_info, uint8_t chr) {
+esp_err_t lcd_i2c_print_char(const lcd_i2c_t* lcd_i2c, uint8_t chr) {
     esp_err_t ret = ESP_FAIL;
-    if (lcd_i2c_confirmar_init(i2c_lcd1602_info)) {
-        ret = lcd_i2c_enviar_dado(i2c_lcd1602_info, chr);
+    if (lcd_i2c_confirmar_init(lcd_i2c)) {
+        ret = lcd_i2c_enviar_dado(lcd_i2c, chr);
     }
     return ret;
 }
 
-esp_err_t lcd_i2c_printf(const i2c_lcd1602_info_t* i2c_lcd1602_info, const char* string) {
+esp_err_t lcd_i2c_printf(const lcd_i2c_t* lcd_i2c, const char* string) {
     esp_err_t ret = ESP_FAIL;
-    if (lcd_i2c_confirmar_init(i2c_lcd1602_info)) {
+    if (lcd_i2c_confirmar_init(lcd_i2c)) {
         ESP_LOGI(TAG, "lcd_i2c_printf: %s", string);
         ret = ESP_OK;
         for (int i = 0; ret == ESP_OK && string[i]; ++i) {
-            ret = lcd_i2c_enviar_dado(i2c_lcd1602_info, string[i]);
+            ret = lcd_i2c_enviar_dado(lcd_i2c, string[i]);
         }
     }
     return ret;
