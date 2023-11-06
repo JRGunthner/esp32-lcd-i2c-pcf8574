@@ -73,27 +73,24 @@ typedef enum {
 i2c_lcd1602_info_t* i2c_lcd1602_malloc(void);
 
 /**
- * @brief Delete an existing I2C-LCD1602 info instance.
- *
- * @param[in,out] tsl2561_info Pointer to I2C-LCD1602 info instance that will be
- * freed and set to NULL.
+ * @brief Destrutor de uma instância de I2C-LCD info.
+ * @param[in,out] i2c_lcd1602_info Ponteiro para a instância de I2C-LCD info que
+ *                                 será destruída e definida como NULL.
  */
 void i2c_lcd1602_free(i2c_lcd1602_info_t** tsl2561_info);
 
 /**
- * @brief Initialise a I2C-LCD1602 info instance with the specified SMBus
- * information.
- *
- * @param[in] i2c_lcd1602_info Pointer to I2C-LCD1602 info instance.
- * @param[in] smbus_info Pointer to SMBus info instance.
- * @param[in] backlight Initial backlight state.
- * @param[in] num_rows Maximum number of supported rows for this device. Typical
- * values include 2 (1602) or 4 (2004).
- * @param[in] num_columns Maximum number of supported columns for this device.
- * Typical values include 40 (1602, 2004).
- * @param[in] num_visible_columns Number of columns visible at any one time.
- * Typical values include 16 (1602) or 20 (2004).
- * @return ESP_OK if successful, otherwise an error constant.
+ * @brief Inicializa uma instância de I2C-LCD info com as informações SMBus.
+ * @param[in] i2c_lcd1602_info Ponteiro para a instância de I2C-LCD info.
+ * @param[in] smbus_info Ponteiro para a instância de SMBus info.
+ * @param[in] backlight Estado inicial do backlight.
+ * @param[in] num_rows Número máximo de linhas suportadas para este dispositivo.
+ *                     Valores típicos incluem 2 (1602) ou 4 (2004).
+ * @param[in] num_columns Número máximo de colunas suportadas para este dispositivo.
+ *                        Valores típicos incluem 32 (1602) ou 80 (2004).
+ * @param[in] num_visible_columns Número de colunas visíveis em qualquer momento.
+ *                               Valores típicos incluem 16 (1602) ou 20 (2004).
+ * @return ESP_OK se bem sucedido, caso contrário, uma constante de erro.
  */
 esp_err_t i2c_lcd1602_init(i2c_lcd1602_info_t* i2c_lcd1602_info,
                            smbus_info_t* smbus_info, bool backlight,
@@ -101,222 +98,194 @@ esp_err_t i2c_lcd1602_init(i2c_lcd1602_info_t* i2c_lcd1602_info,
                            uint8_t num_visible_columns);
 
 /**
- * @brief Reset the display. Custom characters will be cleared.
- *
- * @param[in] i2c_lcd1602_info Pointer to I2C-LCD1602 info instance.
- * @return ESP_OK if successful, otherwise an error constant.
+ * @brief Reset LCD. Os caracteres customizados serão apagados.
+ * @param[in] i2c_lcd1602_info Ponteiro para a instância de I2C-LCD info.
+ * @return ESP_OK se bem sucedido, caso contrário, uma constante de erro.
  */
 esp_err_t i2c_lcd1602_reset(const i2c_lcd1602_info_t* i2c_lcd1602_info);
 
 /**
- * @brief Clears entire display (clears DDRAM) and returns cursor to home
- * position. DDRAM content is cleared, CGRAM content is not changed.
- *
- * @param[in] i2c_lcd1602_info Pointer to initialised I2C-LCD1602 info instance.
- * @return ESP_OK if successful, otherwise an error constant.
+ * @brief Limpa todo o display (limpa DDRAM) e retorna o cursor para a posição inicial.
+ * O conteúdo do DGRAM é apaga, o conteúdo do CGRAM não é alterado.
+ * @param[in] i2c_lcd1602_info Ponteiro para a instância de I2C-LCD info.
+ * @return ESP_OK se bem sucedido, caso contrário, uma constante de erro.
  */
 esp_err_t i2c_lcd1602_clear(const i2c_lcd1602_info_t* i2c_lcd1602_info);
 
 /**
- * @brief Move cursor to home position. Also resets any display shift that may
- * have occurred. DDRAM content is not changed. CGRAM content is not changed.
- *
- * @param[in] i2c_lcd1602_info Pointer to initialised I2C-LCD1602 info instance.
- * @return ESP_OK if successful, otherwise an error constant.
+ * @brief Move o cursor para a posição inicial. Também redefine qualquer deslocamento de exibição que possa ter ocorrido.
+ * Os conteúdos do DGRAM e do CGRAM não são alterados.
+ * @param[in] i2c_lcd1602_info Ponteiro para a instância de I2C-LCD info.
+ * @return ESP_OK se bem sucedido, caso contrário, uma constante de erro.
  */
 esp_err_t i2c_lcd1602_home(const i2c_lcd1602_info_t* i2c_lcd1602_info);
 
 /**
- * @brief Move cursor to specified column and row position. This is where a new
- * character will appear.
- *
- * @param[in] i2c_lcd1602_info Pointer to initialised I2C-LCD1602 info instance.
- * @param[in] col Zero-based horizontal index of intended cursor position.
- * Column 0 is the left column.
- * @param[in] row Zero-based vertical index of intended cursor position. Row 0
- * is the top row.
- * @return ESP_OK if successful, otherwise an error constant.
+ * @brief Move o cursor para uma coluna e linha específicas.
+ * Isso é onde um novo caractere aparecerá.
+ * @param[in] i2c_lcd1602_info Ponteiro para a instância de I2C-LCD info.
+ * @param[in] col Índice da coluna para mover o cursor. A coluna 0 é a coluna mais à esquerda.
+ * @param[in] row Índice da linha para mover o cursor. A linha 0 é a linha superior.
+ * @return ESP_OK se bem sucedido, caso contrário, uma constante de erro.
  */
 esp_err_t i2c_lcd1602_move_cursor(const i2c_lcd1602_info_t* i2c_lcd1602_info, uint8_t col, uint8_t row);
 
 /**
- * @brief Enable or disable the LED backlight.
- *
- * @param[in] i2c_lcd1602_info Pointer to initialised I2C-LCD1602 info instance.
- * @param[in] enable True to enable, false to disable.
- * @return ESP_OK if successful, otherwise an error constant.
+ * @brief Habilita ou desabilita o backlight do display.
+ * @param[in] i2c_lcd1602_info Ponteiro para a instância de I2C-LCD info.
+ * @param[in] enable True para habilitar, false para desabilitar.
+ * @return ESP_OK se bem sucedido, caso contrário, uma constante de erro.
  */
 esp_err_t i2c_lcd1602_set_backlight(i2c_lcd1602_info_t* i2c_lcd1602_info, bool enable);
 
 /**
- * @brief Enable or disable the display. When disabled, the backlight is not
- * affected, but any contents of the DDRAM is not displayed, nor is the cursor.
- * The display is "blank". Re-enabling the display does not affect the contents
- * of DDRAM or the state or position of the cursor.
- *
- * @param[in] i2c_lcd1602_info Pointer to initialised I2C-LCD1602 info instance.
- * @param[in] enable True to enable, false to disable.
- * @return ESP_OK if successful, otherwise an error constant.
+ * @brief Ativa ou desativa a exibição.
+ * Quando desabilitada, a luz de fundo não é afetada, mas nenhum conteúdo
+ * da DDRAM é exibido, nem o cursor. O display estará "em branco".
+ * A reativação da exibição não afeta o conteúdo da DDRAM ou o estado ou posição do cursor.
+ * @param[in] i2c_lcd1602_info Ponteiro para a instância de I2C-LCD info.
+ * @param[in] enable True para habilitar, false para desabilitar.
+ * @return ESP_OK se bem sucedido, caso contrário, uma constante de erro.
  */
 esp_err_t i2c_lcd1602_set_display(i2c_lcd1602_info_t* i2c_lcd1602_info, bool enable);
 
 /**
- * @brief Enable or disable display of the underline cursor.
- *        If enabled, this visually indicates where the next character written
- * to the display will appear. It may be enabled alongside the blinking cursor,
- * however the visual result is inelegant.
- *
- * @param[in] i2c_lcd1602_info Pointer to initialised I2C-LCD1602 info instance.
- * @param[in] enable True to enable, false to disable.
- * @return ESP_OK if successful, otherwise an error constant.
+ * @brief Habilita ou desabilita a exibição do cursor sublinhado.
+ * Se ativado, indica visualmente onde o próximo caractere escrito no display aparecerá.
+ * Pode ser habilitado junto com o cursor piscando.
+ * @param[in] i2c_lcd1602_info Ponteiro para a instância de I2C-LCD info.
+ * @param[in] enable True para habilitar, false para desabilitar.
+ * @return ESP_OK se bem sucedido, caso contrário, uma constante de erro.
  */
 esp_err_t i2c_lcd1602_set_cursor(i2c_lcd1602_info_t* i2c_lcd1602_info, bool enable);
 
 /**
- * @brief Enable or disable display of the blinking block cursor.
- *        If enabled, this visually indicates where the next character written
- * to the display will appear. It may be enabled alongside the underline cursor,
- * however the visual result is inelegant.
- *
- * @param[in] i2c_lcd1602_info Pointer to initialised I2C-LCD1602 info instance.
- * @param[in] enable True to enable, false to disable.
- * @return ESP_OK if successful, otherwise an error constant.
+ * @brief Ativa ou desativa a exibição do cursor de bloco piscante.
+ * Se ativado, indica visualmente onde o próximo caractere escrito no display aparecerá.
+ * Pode ser habilitado junto com o cursor sublinhado.
+ * @param[in] i2c_lcd1602_info Ponteiro para a instância de I2C-LCD info.
+ * @param[in] enable True para habilitar, false para desabilitar.
+ * @return ESP_OK se bem sucedido, caso contrário, uma constante de erro.
  */
 esp_err_t i2c_lcd1602_set_blink(i2c_lcd1602_info_t* i2c_lcd1602_info, bool enable);
 
 /**
- * @brief Set cursor movement direction following each character write to
- * produce left-to-right text.
- *
- * @param[in] i2c_lcd1602_info Pointer to initialised I2C-LCD1602 info instance.
- * @return ESP_OK if successful, otherwise an error constant.
+ * 
+ * @brief Define a direção do movimento do cursor após a escrita de cada caractere.
+ * O texto será escrito da esquerda para a direita.
+ * @param[in] i2c_lcd1602_info Ponteiro para a instância de I2C-LCD info.
+ * @return ESP_OK se bem sucedido, caso contrário, uma constante de erro.
  */
 esp_err_t i2c_lcd1602_set_left_to_right(i2c_lcd1602_info_t* i2c_lcd1602_info);
 
 /**
- * @brief Set cursor movement direction following each character write to
- * produce right-to-left text.
- *
- * @param[in] i2c_lcd1602_info Pointer to initialised I2C-LCD1602 info instance.
- * @return ESP_OK if successful, otherwise an error constant.
+ * @brief Define a direção do movimento do cursor após a escrita de cada caractere.
+ * O texto será escrito da direita para a esquerda.
+ * @param[in] i2c_lcd1602_info Ponteiro para a instância de I2C-LCD info.
+ * @return ESP_OK se bem sucedido, caso contrário, uma constante de erro.
  */
 esp_err_t i2c_lcd1602_set_right_to_left(i2c_lcd1602_info_t* i2c_lcd1602_info);
 
 /**
- * @brief Enable or disable auto-scroll of display.
- *        When enabled, the display will scroll as characters are written to
- * maintain the cursor position on-screen. Left-to-right text will appear to be
- * right-justified from the cursor position. When disabled, the display will not
- * scroll and the cursor will move on-screen. Left-to-right text will appear to
- * be left-justified from the cursor position.
- *
- * @param[in] i2c_lcd1602_info Pointer to initialised I2C-LCD1602 info instance.
- * @param[in] enable True to enable, false to disable.
- * @return ESP_OK if successful, otherwise an error constant.
+ * @brief Habilita ou desabilita a rolagem automática da tela.
+ * Quando ativado, o display irá rolar conforme os caracteres são escritos para
+ * manter a posição do cursor na tela.
+ * O texto da esquerda para a direita aparecerá justificado à direita da posição do cursor.
+ * Quando desativado, o display não rolará e o cursor se moverá na tela.
+ * O texto da direita para a esquerda aparecerá justificado à esquerda da posição do cursor.
+ * @param[in] i2c_lcd1602_info Ponteiro para a instância de I2C-LCD info.
+ * @param[in] enable True para habilitar, false para desabilitar.
+ * @return ESP_OK se bem sucedido, caso contrário, uma constante de erro.
  */
 esp_err_t i2c_lcd1602_set_auto_scroll(i2c_lcd1602_info_t* i2c_lcd1602_info, bool enable);
 
 /**
- * @brief Scroll the display one position to the left. On-screen text will
- * appear to move to the right.
- *
- * @param[in] i2c_lcd1602_info Pointer to initialised I2C-LCD1602 info instance.
- * @return ESP_OK if successful, otherwise an error constant.
+ * @brief Rola o display uma posição para a esquerda.
+ * O texto na tela parecerá se mover para a direita.
+ * @param[in] i2c_lcd1602_info Ponteiro para a instância de I2C-LCD info.
+ * @return ESP_OK se bem sucedido, caso contrário, uma constante de erro.
  */
-esp_err_t i2c_lcd1602_scroll_display_left(
-    const i2c_lcd1602_info_t* i2c_lcd1602_info);
+esp_err_t i2c_lcd1602_scroll_display_left(const i2c_lcd1602_info_t* i2c_lcd1602_info);
 
 /**
- * @brief Scroll the display one position to the right. On-screen text will
- * appear to move to the left.
- * @param[in] i2c_lcd1602_info Pointer to initialised I2C-LCD1602 info instance.
- * @return ESP_OK if successful, otherwise an error constant.
+ * @brief Rola o display uma posição para a direita.
+ * O texto na tela parecerá se mover para a esquerda.
+ * @param[in] i2c_lcd1602_info Ponteiro para a instância de I2C-LCD info.
+ * @return ESP_OK se bem sucedido, caso contrário, uma constante de erro.
  */
-esp_err_t i2c_lcd1602_scroll_display_right(
-    const i2c_lcd1602_info_t* i2c_lcd1602_info);
+esp_err_t i2c_lcd1602_scroll_display_right(const i2c_lcd1602_info_t* i2c_lcd1602_info);
 
 /**
- * @brief Move the cursor one position to the left, even if it is invisible.
- *        This affects where the next character written to the display will
- * appear.
- *
- * @param[in] i2c_lcd1602_info Pointer to initialised I2C-LCD1602 info instance.
- * @return ESP_OK if successful, otherwise an error constant.
+ * @brief Move o cursor uma posição para a esquerda, mesmo que esteja invisível.
+ * Isso afeta onde o próximo caractere escrito no display aparecerá.
+ * @param[in] i2c_lcd1602_info Ponteiro para a instância de I2C-LCD info.
+ * @return ESP_OK se bem sucedido, caso contrário, uma constante de erro.
  */
-esp_err_t i2c_lcd1602_move_cursor_left(
-    const i2c_lcd1602_info_t* i2c_lcd1602_info);
+esp_err_t i2c_lcd1602_move_cursor_left(const i2c_lcd1602_info_t* i2c_lcd1602_info);
 
 /**
- * @brief Move the cursor one position to the right, even if it is invisible.
- *        This affects where the next character written to the display will
- * appear.
- *
- * @param[in] i2c_lcd1602_info Pointer to initialised I2C-LCD1602 info instance.
- * @return ESP_OK if successful, otherwise an error constant.
+ * @brief Move o cursor uma posição para a direita, mesmo que esteja invisível.
+ * Isso afeta onde o próximo caractere escrito no display aparecerá.
+ * @param[in] i2c_lcd1602_info Ponteiro para a instância de I2C-LCD info.
+ * @return ESP_OK se bem sucedido, caso contrário, uma constante de erro.
  */
-esp_err_t i2c_lcd1602_move_cursor_right(
-    const i2c_lcd1602_info_t* i2c_lcd1602_info);
+esp_err_t i2c_lcd1602_move_cursor_right(const i2c_lcd1602_info_t* i2c_lcd1602_info);
 
 /**
- * @brief Define a custom character from an array of pixel data.
+ * @brief Define um caractere personalizado a partir de um mapa de pixels.
+ * Existem oito caracteres personalizados possíveis e o índice baseado em zero é
+ * usado para selecionar um caractere a ser definido. Qualquer definição de caractere
+ * existente nesse índice será perdida. Os caracteres têm 5 pixels de largura e
+ * 8 pixels de altura. A matriz pixelmap consiste em até oito bytes, cada byte
+ * representando os estados dos pixels por linha. O primeiro byte representa a linha
+ * superior. O oitavo byte geralmente é deixado como zero (para deixar espaço para o
+ * cursor sublinhado). Para cada linha, os cinco bits mais baixos representam pixels
+ * que serão iluminados. O bit menos significativo representa o pixel mais à direita.
+ * As linhas vazias serão iguais a zero.
  *
- *        There are eight possible custom characters, and the zero-based index
- * is used to select a character to define. Any existing character definition at
- * that index will be lost. Characters are 5 pixels wide and 8 pixels tall. The
- * pixelmap array consists of up to eight bytes, each byte representing the
- * pixel states per row. The first byte represents the top row. The eighth byte
- * is often left as zero (to leave space for the underline cursor). For each
- * row, the lowest five bits represent pixels that are to be illuminated. The
- * least significant bit represents the right-most pixel. Empty rows will be
- * zero.
+ * Obs.: Após chamar esta função, a DDRAM não será selecionada e a posição do cursor
+ * ficará indefinida. Portanto, é importante que o endereço DDRAM seja definido seguindo
+ * esta função, se for necessário gravar texto no display. Isso pode ser realizado com
+ * uma chamada para i2c_lcd1602_home() ou i2c_lcd1602_move_cursor().
  *
- *        NOTE: After calling this function, the DDRAM will not be selected and
- * the cursor position will be undefined. Therefore it is important that the
- * DDRAM address is set following this function, if text is to be written to the
- * display. This can be performed with a call to i2c_lcd1602_home() or
- * i2c_lcd1602_move_cursor().
+ * Os caracteres personalizados são gravados usando as definições I2C_LCD1602_CHARACTER_CUSTOM_X.
  *
- *        Custom characters are written using the I2C_LCD1602_CHARACTER_CUSTOM_X
- * definitions.
- *
- * @param[in] i2c_lcd1602_info Pointer to initialised I2C-LCD1602 info instance.
- * @param[in] index Zero-based index of the character to define. Only values 0-7
- * are valid.
- * @param[in] pixelmap An 8-byte array defining the pixel map for the new
- * character definition.
- * @return ESP_OK if successful, otherwise an error constant.
+ * @param[in] i2c_lcd1602_info Ponteiro para a instância de I2C-LCD info.
+ * @param[in] index Índice baseado em zero do caractere a ser definido. Somente os valores 0-7 são válidos.
+ * @param[in] pixelmap Uma matriz de 8 bytes definindo o mapa de pixels para a nova definição de caractere.
+ * @return ESP_OK se bem sucedido, caso contrário, uma constante de erro.
  */
 esp_err_t i2c_lcd1602_define_char(const i2c_lcd1602_info_t* i2c_lcd1602_info,
                                   i2c_lcd1602_custom_index_t index,
                                   const uint8_t pixelmap[]);
 
 /**
- * @brief Write a single character to the display at the current position of the
- * cursor. Depending on the active mode, the cursor may move left or right, or
- * the display may shift left or right. Custom characters can be written using
- * the I2C_LCD1602_CHARACTER_CUSTOM_X definitions.
+ * @brief Escreva um único caractere no display na posição atual do cursor.
+ * Dependendo do modo ativo, o cursor pode mover-se para a esquerda ou para
+ * a direita, ou o ecrã pode deslocar-se para a esquerda ou para a direita.
+ * Caracteres personalizados podem ser gravados usando as
+ * definições I2C_LCD1602_CHARACTER_CUSTOM_X.
  *
- *        The display is I2C_LCD1602_NUM_COLUMNS wide, and upon encountering the
- * end of the first line, the cursor will automatically move to the beginning of
- * the second line.
- *
- * @param[in] i2c_lcd1602_info Pointer to initialised I2C-LCD1602 info instance.
- * @return ESP_OK if successful, otherwise an error constant.
+ * A exibição tem largura I2C_LCD1602_NUM_COLUMNS e, ao encontrar o final
+ * da primeira linha, o cursor se moverá automaticamente para o início
+ * da segunda linha.
+ * 
+ * @param[in] i2c_lcd1602_info Ponteiro para a instância de I2C-LCD info.
+ * @return ESP_OK se bem sucedido, caso contrário, uma constante de erro.
  */
 esp_err_t i2c_lcd1602_write_char(const i2c_lcd1602_info_t* i2c_lcd1602_info, uint8_t chr);
 
 /**
- * @brief Write a string of characters to the display, starting at the current
- * position of the cursor. Depending on the active mode, the cursor may move
- * left or right, or the display may shift left or right, after each character
- * is written.
+ * @brief Escreve uma sequência de caracteres no display, começando na posição atual do cursor.
+ * Dependendo do modo ativo, o cursor pode se mover para a esquerda ou para a direita,
+ * ou o display pode se deslocar para a esquerda ou para a direita, após cada caracter ser escrito.
  *
- *        The display is I2C_LCD1602_NUM_COLUMNS wide, and upon encountering the
- * end of the first line, the cursor will automatically move to the beginning of
- * the second line.
+ * A exibição tem largura I2C_LCD1602_NUM_COLUMNS e, ao encontrar o final
+ * da primeira linha, o cursor se moverá automaticamente para o início
+ * da segunda linha.
  *
- * @param[in] i2c_lcd1602_info Pointer to initialised I2C-LCD1602 info instance.
- * @return ESP_OK if successful, otherwise an error constant.
+ * @param[in] i2c_lcd1602_info Ponteiro para a instância de I2C-LCD info.
+ * @return ESP_OK se bem sucedido, caso contrário, uma constante de erro.
  */
 esp_err_t i2c_lcd1602_write_string(const i2c_lcd1602_info_t* i2c_lcd1602_info, const char* string);
 
