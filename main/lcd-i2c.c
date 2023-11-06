@@ -296,15 +296,15 @@ esp_err_t lcd_i2c_retornar_inicio(const lcd_i2c_t* lcd_i2c) {
     return ret;
 }
 
-esp_err_t lcd_i2c_mover_cursor(const lcd_i2c_t* lcd_i2c, uint8_t row, uint8_t col) {
+esp_err_t lcd_i2c_mover_cursor(const lcd_i2c_t* lcd_i2c, uint8_t linha, uint8_t coluna) {
     esp_err_t ret = ESP_FAIL;
     if (lcd_i2c_confirmar_init(lcd_i2c)) {
-        const int inicio_linha[] = {0x00, 0x40, 0x14, 0x54};
-        if (row > lcd_i2c->num_linhas)
-            row = lcd_i2c->num_linhas - 1;
-        if (col > lcd_i2c->num_celulas)
-            col = lcd_i2c->num_celulas - 1;
-        ret = lcd_i2c_enviar_cmd(lcd_i2c, CMD_CONFIG_DDRAM_ADDR | (col + inicio_linha[row]));
+        const uint8_t inicio_linha[4] = {0x00, 0x40, 0x14, 0x54};
+        if (linha > lcd_i2c->num_linhas)
+            linha = lcd_i2c->num_linhas - 1;
+        if (coluna > lcd_i2c->num_celulas)
+            coluna = lcd_i2c->num_celulas - 1;
+        ret = lcd_i2c_enviar_cmd(lcd_i2c, CMD_CONFIG_DDRAM_ADDR | (coluna + inicio_linha[linha]));
     }
     return ret;
 }

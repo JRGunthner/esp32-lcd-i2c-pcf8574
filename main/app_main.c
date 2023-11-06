@@ -11,7 +11,7 @@
 #include "smbus.h"
 #include "lcd-i2c.h"
 
-#define TAG              "MAIN"
+#define TAG "MAIN"
 
 #define I2C_MASTER_SCL   GPIO_NUM_2
 #define I2C_MASTER_SDA   GPIO_NUM_1
@@ -29,7 +29,7 @@
 
 // Utiliza stdin para aguardar o usuario pressionar uma tecla
 // Se desabilitado, aguarda 1 segundo
-#define USE_STDIN             1
+#define USE_STDIN 1
 
 #define I2C_MASTER_NUM        I2C_NUM_0
 #define I2C_MASTER_TX_BUF_LEN 0  // Desabilitado
@@ -39,14 +39,16 @@
 #define I2C_MASTER_SCL_IO     I2C_MASTER_SCL
 
 static void i2c_master_init(void) {
-    int i2c_master_port = I2C_MASTER_NUM;
+    uint8_t i2c_master_port = I2C_MASTER_NUM;
 
-    i2c_config_t conf = {.mode = I2C_MODE_MASTER,
-                         .sda_io_num = I2C_MASTER_SDA_IO,
-                         .scl_io_num = I2C_MASTER_SCL_IO,
-                         .sda_pullup_en = GPIO_PULLUP_ENABLE,
-                         .scl_pullup_en = GPIO_PULLUP_ENABLE,
-                         .master.clk_speed = I2C_MASTER_FREQ_HZ};
+    i2c_config_t conf = {
+        .mode               = I2C_MODE_MASTER,
+        .sda_io_num         = I2C_MASTER_SDA_IO,
+        .scl_io_num         = I2C_MASTER_SCL_IO,
+        .sda_pullup_en      = GPIO_PULLUP_ENABLE,
+        .scl_pullup_en      = GPIO_PULLUP_ENABLE,
+        .master.clk_speed   = I2C_MASTER_FREQ_HZ
+    };
 
     i2c_param_config(i2c_master_port, &conf);
     i2c_driver_install(i2c_master_port, conf.mode, I2C_MASTER_RX_BUF_LEN, I2C_MASTER_TX_BUF_LEN, 0);
@@ -58,9 +60,8 @@ static uint8_t aguardar_uart_rx(void) {
 #ifdef USE_STDIN
     while (!c) {
         STATUS s = uart_rx_one_char(&c);
-        if (s == OK) {
+        if (s == OK)
             printf("%c", c);
-        }
         vTaskDelay(1);
     }
 #else
@@ -87,10 +88,10 @@ void vLcdTask(void* pvParameter) {
 
     ESP_LOGI(TAG, "Escreve 'Aqui tem agua pro chimarrao!' em 0,1");
     aguardar_uart_rx();
-    lcd_i2c_mover_cursor(lcd_info, 1, 0);
-    lcd_i2c_printf(lcd_info, "   Aqui tem agua");
-    lcd_i2c_mover_cursor(lcd_info, 2, 0);
-    lcd_i2c_printf(lcd_info, "   pro chimarrao!");
+    lcd_i2c_mover_cursor(lcd_info, 1, 4);
+    lcd_i2c_printf(lcd_info, "Aqui tem agua");
+    lcd_i2c_mover_cursor(lcd_info, 2, 4);
+    lcd_i2c_printf(lcd_info, "pro chimarrao!");
 
     ESP_LOGI(TAG, "Limpa display e desabilita cursor");
     aguardar_uart_rx();
@@ -286,21 +287,20 @@ void vLcdTask(void* pvParameter) {
     lcd_i2c_limpar_display(lcd_info);
     lcd_i2c_config_cursor(lcd_info, true);
     uint8_t c = 0;
-    uint8_t col = 0;
-    uint8_t row = 0;
+    uint8_t coluna = 0;
+    uint8_t linha = 0;
     while (1) {
         lcd_i2c_print_char(lcd_info, c);
         vTaskDelay(100 / portTICK_RATE_MS);
-        ESP_LOGD(TAG, "col %d, row %d, char 0x%02x", col, row, c);
+        ESP_LOGD(TAG, "coluna %d, linha %d, char 0x%02x", coluna, linha, c);
         ++c;
-        ++col;
-        if (col >= LCD_NUM_COLUNAS) {
-            ++row;
-            if (row >= LCD_NUM_LINHAS) {
-                row = 0;
-            }
-            col = 0;
-            lcd_i2c_mover_cursor(lcd_info, row, col);
+        ++coluna;
+        if (coluna >= LCD_NUM_COLUNAS) {
+            ++linha;
+            if (linha >= LCD_NUM_LINHAS)
+                linha = 0;
+            coluna = 0;
+            lcd_i2c_mover_cursor(lcd_info, linha, coluna);
         }
     }
 

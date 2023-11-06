@@ -122,11 +122,11 @@ esp_err_t lcd_i2c_retornar_inicio(const lcd_i2c_t* lcd_i2c);
  * @brief Move o cursor para uma coluna e linha específicas.
  * Isso é onde um novo caractere aparecerá.
  * @param[in] lcd_i2c Ponteiro para a instância de I2C-LCD info.
- * @param[in] col Índice da coluna para mover o cursor. A coluna 0 é a coluna mais à esquerda.
- * @param[in] row Índice da linha para mover o cursor. A linha 0 é a linha superior.
+ * @param[in] coluna  Índice da coluna para mover o cursor. A coluna 0 é a coluna mais à esquerda.
+ * @param[in] linha   Índice da linha para mover o cursor. A linha 0 é a linha superior.
  * @return ESP_OK se bem sucedido, caso contrário, uma constante de erro.
  */
-esp_err_t lcd_i2c_mover_cursor(const lcd_i2c_t* lcd_i2c, uint8_t row, uint8_t col);
+esp_err_t lcd_i2c_mover_cursor(const lcd_i2c_t* lcd_i2c, uint8_t linha, uint8_t coluna);
 
 /**
  * @brief Habilita ou desabilita o backlight do display.
