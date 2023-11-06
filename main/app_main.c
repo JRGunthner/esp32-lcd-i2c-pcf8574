@@ -43,11 +43,11 @@ static void i2c_master_init(void) {
 
     i2c_config_t conf = {
         .mode               = I2C_MODE_MASTER,
-        .sda_io_num         = I2C_MASTER_SDA_IO,
-        .scl_io_num         = I2C_MASTER_SCL_IO,
-        .sda_pullup_en      = GPIO_PULLUP_ENABLE,
-        .scl_pullup_en      = GPIO_PULLUP_ENABLE,
-        .master.clk_speed   = I2C_MASTER_FREQ_HZ
+                         .sda_io_num         = I2C_MASTER_SDA_IO,
+                         .scl_io_num         = I2C_MASTER_SCL_IO,
+                         .sda_pullup_en      = GPIO_PULLUP_ENABLE,
+                         .scl_pullup_en      = GPIO_PULLUP_ENABLE,
+                         .master.clk_speed   = I2C_MASTER_FREQ_HZ
     };
 
     i2c_param_config(i2c_master_port, &conf);
@@ -244,43 +244,43 @@ void vLcdTask(void* pvParameter) {
     uint8_t check[8] = {0x0, 0x1, 0x3, 0x16, 0x1c, 0x8, 0x0};
     uint8_t cross[8] = {0x0, 0x1b, 0xe, 0x4, 0xe, 0x1b, 0x0};
     uint8_t retarrow[8] = {0x1, 0x1, 0x5, 0x9, 0x1f, 0x8, 0x4};
-    lcd_i2c_caracter_personalizado(lcd_info, I2C_LCD1602_INDEX_CUSTOM_0, bell);
-    lcd_i2c_caracter_personalizado(lcd_info, I2C_LCD1602_INDEX_CUSTOM_1, note);
-    lcd_i2c_caracter_personalizado(lcd_info, I2C_LCD1602_INDEX_CUSTOM_2, clock);
-    lcd_i2c_caracter_personalizado(lcd_info, I2C_LCD1602_INDEX_CUSTOM_3, heart);
-    lcd_i2c_caracter_personalizado(lcd_info, I2C_LCD1602_INDEX_CUSTOM_4, duck);
-    lcd_i2c_caracter_personalizado(lcd_info, I2C_LCD1602_INDEX_CUSTOM_5, check);
-    lcd_i2c_caracter_personalizado(lcd_info, I2C_LCD1602_INDEX_CUSTOM_6, cross);
-    lcd_i2c_caracter_personalizado(lcd_info, I2C_LCD1602_INDEX_CUSTOM_7, retarrow);
+    lcd_i2c_caracter_personalizado(lcd_info, CHAR_CUSTOM_INDICE_00, bell);
+    lcd_i2c_caracter_personalizado(lcd_info, CHAR_CUSTOM_INDICE_01, note);
+    lcd_i2c_caracter_personalizado(lcd_info, CHAR_CUSTOM_INDICE_02, clock);
+    lcd_i2c_caracter_personalizado(lcd_info, CHAR_CUSTOM_INDICE_03, heart);
+    lcd_i2c_caracter_personalizado(lcd_info, CHAR_CUSTOM_INDICE_04, duck);
+    lcd_i2c_caracter_personalizado(lcd_info, CHAR_CUSTOM_INDICE_05, check);
+    lcd_i2c_caracter_personalizado(lcd_info, CHAR_CUSTOM_INDICE_06, cross);
+    lcd_i2c_caracter_personalizado(lcd_info, CHAR_CUSTOM_INDICE_07, retarrow);
 
     // Após definir caracteres customizados, o endereço DDRAM deve ser definido por home() ou movendo o cursor
     lcd_i2c_mover_cursor(lcd_info, 0, 0);
-    lcd_i2c_print_char(lcd_info, I2C_LCD1602_CHARACTER_CUSTOM_0);
-    lcd_i2c_print_char(lcd_info, I2C_LCD1602_CHARACTER_CUSTOM_1);
-    lcd_i2c_print_char(lcd_info, I2C_LCD1602_CHARACTER_CUSTOM_2);
-    lcd_i2c_print_char(lcd_info, I2C_LCD1602_CHARACTER_CUSTOM_3);
-    lcd_i2c_print_char(lcd_info, I2C_LCD1602_CHARACTER_CUSTOM_4);
-    lcd_i2c_print_char(lcd_info, I2C_LCD1602_CHARACTER_CUSTOM_5);
-    lcd_i2c_print_char(lcd_info, I2C_LCD1602_CHARACTER_CUSTOM_6);
-    lcd_i2c_print_char(lcd_info, I2C_LCD1602_CHARACTER_CUSTOM_7);
+    lcd_i2c_print_char(lcd_info, CHAR_CUSTOM_00);
+    lcd_i2c_print_char(lcd_info, CHAR_CUSTOM_01);
+    lcd_i2c_print_char(lcd_info, CHAR_CUSTOM_02);
+    lcd_i2c_print_char(lcd_info, CHAR_CUSTOM_03);
+    lcd_i2c_print_char(lcd_info, CHAR_CUSTOM_04);
+    lcd_i2c_print_char(lcd_info, CHAR_CUSTOM_05);
+    lcd_i2c_print_char(lcd_info, CHAR_CUSTOM_06);
+    lcd_i2c_print_char(lcd_info, CHAR_CUSTOM_07);
 
     ESP_LOGI(TAG, "Escreve os caracteres especiais");
     aguardar_uart_rx();
     lcd_i2c_mover_cursor(lcd_info, 1, 0);
-    lcd_i2c_print_char(lcd_info, I2C_LCD1602_CHARACTER_ALPHA);
-    lcd_i2c_print_char(lcd_info, I2C_LCD1602_CHARACTER_BETA);
-    lcd_i2c_print_char(lcd_info, I2C_LCD1602_CHARACTER_THETA);
-    lcd_i2c_print_char(lcd_info, I2C_LCD1602_CHARACTER_PI);
-    lcd_i2c_print_char(lcd_info, I2C_LCD1602_CHARACTER_OMEGA);
-    lcd_i2c_print_char(lcd_info, I2C_LCD1602_CHARACTER_SIGMA);
-    lcd_i2c_print_char(lcd_info, I2C_LCD1602_CHARACTER_INFINITY);
-    lcd_i2c_print_char(lcd_info, I2C_LCD1602_CHARACTER_DEGREE);
-    lcd_i2c_print_char(lcd_info, I2C_LCD1602_CHARACTER_ARROW_LEFT);
-    lcd_i2c_print_char(lcd_info, I2C_LCD1602_CHARACTER_ARROW_RIGHT);
-    lcd_i2c_print_char(lcd_info, I2C_LCD1602_CHARACTER_SQUARE);
-    lcd_i2c_print_char(lcd_info, I2C_LCD1602_CHARACTER_DOT);
-    lcd_i2c_print_char(lcd_info, I2C_LCD1602_CHARACTER_DIVIDE);
-    lcd_i2c_print_char(lcd_info, I2C_LCD1602_CHARACTER_BLOCK);
+    lcd_i2c_print_char(lcd_info, CHAR_ALFA_MIN);
+    lcd_i2c_print_char(lcd_info, CHAR_BETA_MIN);
+    lcd_i2c_print_char(lcd_info, CHAR_THETA_MIN);
+    lcd_i2c_print_char(lcd_info, CHAR_PI_MIN);
+    lcd_i2c_print_char(lcd_info, CHAR_OMEGA_MAI);
+    lcd_i2c_print_char(lcd_info, CHAR_SIGMA_MAI);
+    lcd_i2c_print_char(lcd_info, CHAR_INFINITO);
+    lcd_i2c_print_char(lcd_info, CHAR_GRAU);
+    lcd_i2c_print_char(lcd_info, CHAR_SETA_ESQUERDA);
+    lcd_i2c_print_char(lcd_info, CHAR_SETA_DIREITA);
+    lcd_i2c_print_char(lcd_info, CHAR_2_SUBS);
+    lcd_i2c_print_char(lcd_info, CHAR_PONTO_CENTRO);
+    lcd_i2c_print_char(lcd_info, CHAR_DIVISAO);
+    lcd_i2c_print_char(lcd_info, CHAR_BLOCO);
 
     ESP_LOGI(TAG, "Escreve todos os caracteres (loop)");
     aguardar_uart_rx();

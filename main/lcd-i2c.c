@@ -408,7 +408,7 @@ esp_err_t lcd_i2c_mover_cursor_direita(const lcd_i2c_t* lcd_i2c) {
     return ret;
 }
 
-esp_err_t lcd_i2c_caracter_personalizado(const lcd_i2c_t* lcd_i2c, i2c_lcd1602_custom_index_t index,
+esp_err_t lcd_i2c_caracter_personalizado(const lcd_i2c_t* lcd_i2c, lcd_i2c_char_custom_indice_t index,
                                          const uint8_t pixelmap[]) {
     esp_err_t ret = ESP_FAIL;
     if (lcd_i2c_confirmar_init(lcd_i2c)) {

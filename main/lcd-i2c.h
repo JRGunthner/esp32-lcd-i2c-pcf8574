@@ -16,46 +16,46 @@ typedef struct {
     uint8_t num_colunas;   // Número de colunas
     uint8_t num_celulas;   // Número de células totais, incluindo as não visíveis
     uint8_t display_ctrl;  // Atividade atual do controle do display
-    uint8_t modo_entrada;  // modo de entrada ativo atual
+    uint8_t modo_entrada;  // Modo de entrada ativo atual
 } lcd_i2c_t;
 
 // Caracteres especiais customizados para o código ROM A00
 // Use o segundo conjunto (0bxxxx1xxx) para evitar colocar o caractere nulo dentro de uma string
-#define I2C_LCD1602_CHARACTER_CUSTOM_0    0b00001000  // Caractere customizado no índice 0
-#define I2C_LCD1602_CHARACTER_CUSTOM_1    0b00001001  // Caractere customizado no índice 1
-#define I2C_LCD1602_CHARACTER_CUSTOM_2    0b00001010  // Caractere customizado no índice 2
-#define I2C_LCD1602_CHARACTER_CUSTOM_3    0b00001011  // Caractere customizado no índice 3
-#define I2C_LCD1602_CHARACTER_CUSTOM_4    0b00001100  // Caractere customizado no índice 4
-#define I2C_LCD1602_CHARACTER_CUSTOM_5    0b00001101  // Caractere customizado no índice 5
-#define I2C_LCD1602_CHARACTER_CUSTOM_6    0b00001110  // Caractere customizado no índice 6
-#define I2C_LCD1602_CHARACTER_CUSTOM_7    0b00001111  // Caractere customizado no índice 7
+#define CHAR_CUSTOM_00     0b00001000  // Caractere customizado no índice 0
+#define CHAR_CUSTOM_01     0b00001001  // Caractere customizado no índice 1
+#define CHAR_CUSTOM_02     0b00001010  // Caractere customizado no índice 2
+#define CHAR_CUSTOM_03     0b00001011  // Caractere customizado no índice 3
+#define CHAR_CUSTOM_04     0b00001100  // Caractere customizado no índice 4
+#define CHAR_CUSTOM_05     0b00001101  // Caractere customizado no índice 5
+#define CHAR_CUSTOM_06     0b00001110  // Caractere customizado no índice 6
+#define CHAR_CUSTOM_07     0b00001111  // Caractere customizado no índice 7
 
-#define I2C_LCD1602_CHARACTER_ALPHA       0b11100000  // Alpha minúsculo
-#define I2C_LCD1602_CHARACTER_BETA        0b11100010  // Beta minúsculo
-#define I2C_LCD1602_CHARACTER_THETA       0b11110010  // Theta minúsculo
-#define I2C_LCD1602_CHARACTER_PI          0b11110111  // Pi minúsculo
-#define I2C_LCD1602_CHARACTER_OMEGA       0b11110100  // Omega maiúsculo
-#define I2C_LCD1602_CHARACTER_SIGMA       0b11110110  // Sigma maiúsculo
-#define I2C_LCD1602_CHARACTER_INFINITY    0b11110011  // Infinito
-#define I2C_LCD1602_CHARACTER_DEGREE      0b11011111  // Grau (°)
-#define I2C_LCD1602_CHARACTER_ARROW_RIGHT 0b01111110  // Seta para a direita
-#define I2C_LCD1602_CHARACTER_ARROW_LEFT  0b01111111  // Seta para a esquerda
-#define I2C_LCD1602_CHARACTER_SQUARE      0b11011011  // 2 pequeno
-#define I2C_LCD1602_CHARACTER_DOT         0b10100101  // ponto no centro
-#define I2C_LCD1602_CHARACTER_DIVIDE      0b11111101  // Divisão
-#define I2C_LCD1602_CHARACTER_BLOCK       0b11111111  // Bloco 5x8 preenchido
+#define CHAR_ALFA_MIN      0b11100000  // Alfa minúsculo
+#define CHAR_BETA_MIN      0b11100010  // Beta minúsculo
+#define CHAR_THETA_MIN     0b11110010  // Theta minúsculo
+#define CHAR_PI_MIN        0b11110111  // Pi minúsculo
+#define CHAR_OMEGA_MAI     0b11110100  // Omega maiúsculo
+#define CHAR_SIGMA_MAI     0b11110110  // Sigma maiúsculo
+#define CHAR_INFINITO      0b11110011  // Infinito
+#define CHAR_GRAU          0b11011111  // Grau (°)
+#define CHAR_SETA_DIREITA  0b01111110  // Seta para a direita
+#define CHAR_SETA_ESQUERDA 0b01111111  // Seta para a esquerda
+#define CHAR_2_SUBS        0b11011011  // 2 subscrito
+#define CHAR_PONTO_CENTRO  0b10100101  // ponto no centro
+#define CHAR_DIVISAO       0b11111101  // Divisão
+#define CHAR_BLOCO         0b11111111  // Bloco 5x8 preenchido
 
 // Caracteres customizados
 typedef enum {
-    I2C_LCD1602_INDEX_CUSTOM_0 = 0,
-    I2C_LCD1602_INDEX_CUSTOM_1,
-    I2C_LCD1602_INDEX_CUSTOM_2,
-    I2C_LCD1602_INDEX_CUSTOM_3,
-    I2C_LCD1602_INDEX_CUSTOM_4,
-    I2C_LCD1602_INDEX_CUSTOM_5,
-    I2C_LCD1602_INDEX_CUSTOM_6,
-    I2C_LCD1602_INDEX_CUSTOM_7,
-} i2c_lcd1602_custom_index_t;
+    CHAR_CUSTOM_INDICE_00 = 0,
+    CHAR_CUSTOM_INDICE_01,
+    CHAR_CUSTOM_INDICE_02,
+    CHAR_CUSTOM_INDICE_03,
+    CHAR_CUSTOM_INDICE_04,
+    CHAR_CUSTOM_INDICE_05,
+    CHAR_CUSTOM_INDICE_06,
+    CHAR_CUSTOM_INDICE_07
+} lcd_i2c_char_custom_indice_t;
 
 #define LCD_I2C_ERROR_CHECK(x)                                             \
     do {                                                                   \
@@ -253,7 +253,7 @@ esp_err_t lcd_i2c_mover_cursor_direita(const lcd_i2c_t* lcd_i2c);
  * @param[in] pixelmap Uma matriz de 8 bytes definindo o mapa de pixels para a nova definição de caractere.
  * @return ESP_OK se bem sucedido, caso contrário, uma constante de erro.
  */
-esp_err_t lcd_i2c_caracter_personalizado(const lcd_i2c_t* lcd_i2c, i2c_lcd1602_custom_index_t index,
+esp_err_t lcd_i2c_caracter_personalizado(const lcd_i2c_t* lcd_i2c, lcd_i2c_char_custom_indice_t index,
                                          const uint8_t pixelmap[]);
 
 /**
