@@ -8,7 +8,7 @@
 
 This is an example application for the HD4470-compatible LCD1602 device connected via an I2C backpack.
 
-This application is also usable with an LCD2004 module (20 columns, 4 rows), by uncommenting the `LCD_NUM_ROWS`, `LCD_NUM_COLUMNS`, and `LCD_NUM_VISIBLE_COLUMNS` definitions at the top of `app_main.c`.
+This application is also usable with an LCD2004 module (20 columns, 4 rows), by uncommenting the `LCD_NUM_LINHAS`, `LCD_NUM_CELULAS`, and `LCD_NUM_COLUNAS` definitions at the top of `app_main.c`.
 
 It is written and tested for v3.3 of the [ESP-IDF](https://github.com/espressif/esp-idf) environment, using the xtensa-esp32-elf toolchain (gcc version 5.2.0).
 
