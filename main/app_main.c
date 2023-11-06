@@ -87,9 +87,9 @@ void vLcdTask(void* pvParameter) {
 
     ESP_LOGI(TAG, "Escreve 'Aqui tem agua pro chimarrao!' em 0,1");
     aguardar_uart_rx();
-    lcd_i2c_mover_cursor(lcd_info, 0, 1);
+    lcd_i2c_mover_cursor(lcd_info, 1, 0);
     lcd_i2c_printf(lcd_info, "   Aqui tem agua");
-    lcd_i2c_mover_cursor(lcd_info, 0, 2);
+    lcd_i2c_mover_cursor(lcd_info, 2, 0);
     lcd_i2c_printf(lcd_info, "   pro chimarrao!");
 
     ESP_LOGI(TAG, "Limpa display e desabilita cursor");
@@ -114,19 +114,19 @@ void vLcdTask(void* pvParameter) {
     lcd_i2c_mover_cursor(lcd_info, 0, 0);
     lcd_i2c_print_char(lcd_info, 'A');
 
-    ESP_LOGI(TAG, "Escreve 'B' em 8,0");
+    ESP_LOGI(TAG, "Escreve 'B' em 0,8");
     aguardar_uart_rx();
-    lcd_i2c_mover_cursor(lcd_info, 8, 0);
+    lcd_i2c_mover_cursor(lcd_info, 0, 8);
     lcd_i2c_print_char(lcd_info, 'B');
 
-    ESP_LOGI(TAG, "Escreve 'C' em 15,1");
+    ESP_LOGI(TAG, "Escreve 'C' em 1,15");
     aguardar_uart_rx();
-    lcd_i2c_mover_cursor(lcd_info, 15, 1);
+    lcd_i2c_mover_cursor(lcd_info, 1, 15);
     lcd_i2c_print_char(lcd_info, 'C');
 
-    ESP_LOGI(TAG, "Move o cursor para 0,1 e pisca. O cursor deve estar ligado");
+    ESP_LOGI(TAG, "Move o cursor para 1,0 e pisca. O cursor deve estar ligado");
     aguardar_uart_rx();
-    lcd_i2c_mover_cursor(lcd_info, 0, 1);
+    lcd_i2c_mover_cursor(lcd_info, 1, 0);
     lcd_i2c_config_cursor_piscante(lcd_info, true);
 
     ESP_LOGI(TAG, "Escreve 'DE' e move o cursor para tras no 'D'");
@@ -140,9 +140,9 @@ void vLcdTask(void* pvParameter) {
     aguardar_uart_rx();
     lcd_i2c_habilita_display(lcd_info, false);
 
-    ESP_LOGI(TAG, "Escreve 'F' em 7,1 (display desabilitado)");
+    ESP_LOGI(TAG, "Escreve 'F' em 1,7 (display desabilitado)");
     aguardar_uart_rx();
-    lcd_i2c_mover_cursor(lcd_info, 7, 1);
+    lcd_i2c_mover_cursor(lcd_info, 1, 7);
     lcd_i2c_print_char(lcd_info, 'F');
 
     ESP_LOGI(TAG, "Habilita display");
@@ -179,9 +179,9 @@ void vLcdTask(void* pvParameter) {
         lcd_i2c_rolagem_direita(lcd_info);
     }
 
-    ESP_LOGI(TAG, "Move para 8,0 e mostra o cursor");
+    ESP_LOGI(TAG, "Move para 0,8 e mostra o cursor");
     aguardar_uart_rx();
-    lcd_i2c_mover_cursor(lcd_info, 8, 0);
+    lcd_i2c_mover_cursor(lcd_info, 0, 8);
     lcd_i2c_config_cursor(lcd_info, true);
 
     ESP_LOGI(TAG, "Move o cursor 5 casas para a direita");
@@ -265,7 +265,7 @@ void vLcdTask(void* pvParameter) {
 
     ESP_LOGI(TAG, "Escreve os caracteres especiais");
     aguardar_uart_rx();
-    lcd_i2c_mover_cursor(lcd_info, 0, 1);
+    lcd_i2c_mover_cursor(lcd_info, 1, 0);
     lcd_i2c_print_char(lcd_info, I2C_LCD1602_CHARACTER_ALPHA);
     lcd_i2c_print_char(lcd_info, I2C_LCD1602_CHARACTER_BETA);
     lcd_i2c_print_char(lcd_info, I2C_LCD1602_CHARACTER_THETA);
@@ -300,7 +300,7 @@ void vLcdTask(void* pvParameter) {
                 row = 0;
             }
             col = 0;
-            lcd_i2c_mover_cursor(lcd_info, col, row);
+            lcd_i2c_mover_cursor(lcd_info, row, col);
         }
     }
 

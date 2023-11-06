@@ -296,7 +296,7 @@ esp_err_t lcd_i2c_retornar_inicio(const lcd_i2c_t* lcd_i2c) {
     return ret;
 }
 
-esp_err_t lcd_i2c_mover_cursor(const lcd_i2c_t* lcd_i2c, uint8_t col, uint8_t row) {
+esp_err_t lcd_i2c_mover_cursor(const lcd_i2c_t* lcd_i2c, uint8_t row, uint8_t col) {
     esp_err_t ret = ESP_FAIL;
     if (lcd_i2c_confirmar_init(lcd_i2c)) {
         const int inicio_linha[] = {0x00, 0x40, 0x14, 0x54};
