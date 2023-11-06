@@ -9,7 +9,7 @@
 #include "rom/uart.h"
 
 #include "smbus.h"
-#include "i2c-lcd1602.h"
+#include "lcd-i2c.h"
 
 #define TAG "app"
 
