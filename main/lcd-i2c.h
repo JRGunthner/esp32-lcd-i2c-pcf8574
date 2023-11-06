@@ -57,14 +57,6 @@ typedef enum {
     CHAR_CUSTOM_INDICE_07
 } lcd_i2c_char_custom_indice_t;
 
-#define LCD_I2C_ERROR_CHECK(x)                                             \
-    do {                                                                   \
-        esp_err_t rc = (x);                                                \
-        if (rc != ESP_OK) {                                                \
-            ESP_LOGW(TAG, "I2C erro %d em %s:%d", rc, __FILE__, __LINE__); \
-        }                                                                  \
-    } while (0);
-
 /**
  * @brief Construtor de uma nova instância de I2C-LCD info.
  *        A nova instância deve ser inicializada antes de chamar outras funções.
