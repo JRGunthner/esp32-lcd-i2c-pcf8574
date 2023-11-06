@@ -1,17 +1,5 @@
-/**
- * @file
- * @brief Interface definitions for the ESP32-compatible I2C LCD1602 component.
- *
- * This component provides structures and functions that are useful for
- * communicating with the device.
- *
- * Technically, the LCD1602 device is an I2C not SMBus device, however some
- * SMBus protocols can be used to communicate with the device, so it makes sense
- * to use an SMBus interface to manage communication.
- */
-
-#ifndef I2C_LCD1602_H
-#define I2C_LCD1602_H
+#ifndef __I2C_LCD1602_H__
+#define __I2C_LCD1602_H__
 
 #include <stdbool.h>
 #include "smbus.h"
@@ -20,72 +8,67 @@
 extern "C" {
 #endif
 
-/**
- * @brief Structure containing information related to the I2C-LCD1602 device.
- */
 typedef struct {
-    bool init;  ///< True if struct has been initialised, otherwise false
-    smbus_info_t* smbus_info;       // Pointer to associated SMBus info
-    uint8_t backlight_flag;         // Non-zero if backlight is to be enabled, otherwise zero
-    uint8_t num_rows;               // Number of configured rows
-    uint8_t num_columns;            // Number of configured columns, including offscreen columns
-    uint8_t num_visible_columns;    // Number of visible columns
-    uint8_t display_control_flags;  // Currently active display control flags
-    uint8_t entry_mode_flags;       // Currently active entry mode flags
+    bool init;                      // True se o display foi inicializado
+    smbus_info_t* smbus_info;       // Ponteiro para a estrutura smbus_info
+    uint8_t backlight_flag;         // Backlight habilitado (1), desabilitado (0)
+    uint8_t num_rows;               // Nuúmero de linhas
+    uint8_t num_columns;            // Número de células totais, incluindo as não visíveis
+    uint8_t num_visible_columns;    // Número de colunas
+    uint8_t display_control_flags;  // Atividade atual do controle do display
+    uint8_t entry_mode_flags;       // modo de entrada ativo atual
 } i2c_lcd1602_info_t;
 
-// Special characters for ROM Code A00
+// Caracteres especiais customizados para o código ROM A00
+// Use o segundo conjunto (0bxxxx1xxx) para evitar colocar o caractere nulo dentro de uma string
+#define I2C_LCD1602_CHARACTER_CUSTOM_0 0b00001000 // Caractere customizado no índice 0
+#define I2C_LCD1602_CHARACTER_CUSTOM_1 0b00001001 // Caractere customizado no índice 1
+#define I2C_LCD1602_CHARACTER_CUSTOM_2 0b00001010 // Caractere customizado no índice 2
+#define I2C_LCD1602_CHARACTER_CUSTOM_3 0b00001011 // Caractere customizado no índice 3
+#define I2C_LCD1602_CHARACTER_CUSTOM_4 0b00001100 // Caractere customizado no índice 4
+#define I2C_LCD1602_CHARACTER_CUSTOM_5 0b00001101 // Caractere customizado no índice 5
+#define I2C_LCD1602_CHARACTER_CUSTOM_6 0b00001110 // Caractere customizado no índice 6
+#define I2C_LCD1602_CHARACTER_CUSTOM_7 0b00001111 // Caractere customizado no índice 7
 
-// Use the second set (0bxxxx1xxx) to avoid placing the null character within a string
-#define I2C_LCD1602_CHARACTER_CUSTOM_0 0b00001000 // User-defined custom symbol in index 0
-#define I2C_LCD1602_CHARACTER_CUSTOM_1 0b00001001 // User-defined custom symbol in index 1
-#define I2C_LCD1602_CHARACTER_CUSTOM_2 0b00001010 // User-defined custom symbol in index 2
-#define I2C_LCD1602_CHARACTER_CUSTOM_3 0b00001011 // User-defined custom symbol in index 3
-#define I2C_LCD1602_CHARACTER_CUSTOM_4 0b00001100 // User-defined custom symbol in index 4
-#define I2C_LCD1602_CHARACTER_CUSTOM_5 0b00001101 // User-defined custom symbol in index 5
-#define I2C_LCD1602_CHARACTER_CUSTOM_6 0b00001110 // User-defined custom symbol in index 6
-#define I2C_LCD1602_CHARACTER_CUSTOM_7 0b00001111 // User-defined custom symbol in index 7
+#define I2C_LCD1602_CHARACTER_ALPHA    0b11100000 // Alpha minúsculo
+#define I2C_LCD1602_CHARACTER_BETA     0b11100010 // Beta minúsculo
+#define I2C_LCD1602_CHARACTER_THETA    0b11110010 // Theta minúsculo
+#define I2C_LCD1602_CHARACTER_PI       0b11110111 // Pi minúsculo
+#define I2C_LCD1602_CHARACTER_OMEGA    0b11110100 // Omega maiúsculo
+#define I2C_LCD1602_CHARACTER_SIGMA    0b11110110 // Sigma maiúsculo
+#define I2C_LCD1602_CHARACTER_INFINITY 0b11110011 // Infinito
+#define I2C_LCD1602_CHARACTER_DEGREE   0b11011111 // Grau (°)
+#define I2C_LCD1602_CHARACTER_ARROW_RIGHT 0b01111110 // Seta para a direita
+#define I2C_LCD1602_CHARACTER_ARROW_LEFT  0b01111111 // Seta para a esquerda
+#define I2C_LCD1602_CHARACTER_SQUARE   0b11011011 // 2 pequeno
+#define I2C_LCD1602_CHARACTER_DOT      0b10100101 // ponto no centro
+#define I2C_LCD1602_CHARACTER_DIVIDE   0b11111101 // Divisão
+#define I2C_LCD1602_CHARACTER_BLOCK    0b11111111 // Bloco 5x8 preenchido
 
-#define I2C_LCD1602_CHARACTER_ALPHA    0b11100000 // Lower-case alpha symbol
-#define I2C_LCD1602_CHARACTER_BETA     0b11100010 // Lower-case beta symbol
-#define I2C_LCD1602_CHARACTER_THETA    0b11110010 // Lower-case theta symbol
-#define I2C_LCD1602_CHARACTER_PI       0b11110111 // Lower-case pi symbol
-#define I2C_LCD1602_CHARACTER_OMEGA    0b11110100 // Upper-case omega symbol
-#define I2C_LCD1602_CHARACTER_SIGMA    0b11110110 // Upper-case sigma symbol
-#define I2C_LCD1602_CHARACTER_INFINITY 0b11110011 // Infinity symbol
-#define I2C_LCD1602_CHARACTER_DEGREE   0b11011111 // Degree symbol
-#define I2C_LCD1602_CHARACTER_ARROW_RIGHT 0b01111110 // Arrow pointing right symbol
-#define I2C_LCD1602_CHARACTER_ARROW_LEFT  0b01111111 // Arrow pointing left symbol
-#define I2C_LCD1602_CHARACTER_SQUARE   0b11011011 // Square outline symbol
-#define I2C_LCD1602_CHARACTER_DOT      0b10100101 // Centred dot symbol
-#define I2C_LCD1602_CHARACTER_DIVIDE   0b11111101 // Division sign symbol
-#define I2C_LCD1602_CHARACTER_BLOCK    0b11111111 // 5x8 filled block
-
-// Enum of valid indexes for definitions of user-defined characters.
+// Caracteres customizados
 typedef enum {
-    I2C_LCD1602_INDEX_CUSTOM_0 = 0, // Index of first user-defined custom symbol
-    I2C_LCD1602_INDEX_CUSTOM_1,     // Index of second user-defined custom symbol
-    I2C_LCD1602_INDEX_CUSTOM_2,     // Index of third user-defined custom symbol
-    I2C_LCD1602_INDEX_CUSTOM_3,     // Index of fourth user-defined custom symbol
-    I2C_LCD1602_INDEX_CUSTOM_4,     // Index of fifth user-defined custom symbol
-    I2C_LCD1602_INDEX_CUSTOM_5,     // Index of sixth user-defined custom symbol
-    I2C_LCD1602_INDEX_CUSTOM_6,     // Index of seventh user-defined custom symbol
-    I2C_LCD1602_INDEX_CUSTOM_7,     // Index of eighth user-defined custom symbol
+    I2C_LCD1602_INDEX_CUSTOM_0 = 0,
+    I2C_LCD1602_INDEX_CUSTOM_1,
+    I2C_LCD1602_INDEX_CUSTOM_2,
+    I2C_LCD1602_INDEX_CUSTOM_3,
+    I2C_LCD1602_INDEX_CUSTOM_4,
+    I2C_LCD1602_INDEX_CUSTOM_5,
+    I2C_LCD1602_INDEX_CUSTOM_6,
+    I2C_LCD1602_INDEX_CUSTOM_7,
 } i2c_lcd1602_custom_index_t;
 
 #define I2C_LCD1602_ERROR_CHECK(x)                                          \
     do {                                                                    \
         esp_err_t rc = (x);                                                 \
         if (rc != ESP_OK) {                                                 \
-            ESP_LOGW(TAG, "I2C error %d at %s:%d", rc, __FILE__, __LINE__); \
+            ESP_LOGW(TAG, "I2C erro %d em %s:%d", rc, __FILE__, __LINE__); \
         }                                                                   \
     } while (0);
 
 /**
- * @brief Construct a new I2C-LCD1602 info instance.
- *        New instance should be initialised before calling other functions.
- *
- * @return Pointer to new device info instance, or NULL if it cannot be created.
+ * @brief Construtor de uma nova instância de I2C-LCD info.
+ *        A nova instância deve ser inicializada antes de chamar outras funções.
+ * @return Ponteiro para a nova instância de I2C-LCD info, ou NULL se não puder ser criada
  */
 i2c_lcd1602_info_t* i2c_lcd1602_malloc(void);
 
@@ -341,4 +324,4 @@ esp_err_t i2c_lcd1602_write_string(const i2c_lcd1602_info_t* i2c_lcd1602_info, c
 }
 #endif
 
-#endif  // I2C_LCD1602_H
+#endif  // __I2C_LCD1602_H__
