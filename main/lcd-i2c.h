@@ -73,15 +73,15 @@ void lcd_i2c_free(lcd_i2c_t** lcd_i2c);
 
 /**
  * @brief Inicializa uma instância de I2C-LCD info com as informações SMBus.
- * @param[in] lcd_i2c Ponteiro para a instância de I2C-LCD info.
- * @param[in] smbus            Ponteiro para a instância de SMBus info.
- * @param[in] backlight        Estado inicial do backlight.
- * @param[in] num_linhas Número máximo de linhas suportadas para este dispositivo.
- *                     Valores típicos incluem 2 (1602) ou 4 (2004).
+ * @param[in] lcd_i2c     Ponteiro para a instância de I2C-LCD info.
+ * @param[in] smbus       Ponteiro para a instância de SMBus info.
+ * @param[in] backlight   Estado inicial do backlight.
+ * @param[in] num_linhas  Número máximo de linhas suportadas para este dispositivo.
+ *                        Valores típicos incluem 2 (1602) ou 4 (2004).
  * @param[in] num_celulas Número máximo de colunas suportadas para este dispositivo.
  *                        Valores típicos incluem 32 (1602) ou 80 (2004).
  * @param[in] num_colunas Número de colunas visíveis em qualquer momento.
- *                               Valores típicos incluem 16 (1602) ou 20 (2004).
+ *                        Valores típicos incluem 16 (1602) ou 20 (2004).
  * @return ESP_OK se bem sucedido, caso contrário, uma constante de erro.
  */
 esp_err_t lcd_i2c_init(lcd_i2c_t* lcd_i2c, smbus_t* smbus, bool backlight, uint8_t num_linhas, uint8_t num_celulas,
@@ -122,42 +122,42 @@ esp_err_t lcd_i2c_mover_cursor(const lcd_i2c_t* lcd_i2c, uint8_t linha, uint8_t 
 
 /**
  * @brief Habilita ou desabilita o backlight do display.
- * @param[in] lcd_i2c Ponteiro para a instância de I2C-LCD info.
- * @param[in] enable True para habilitar, false para desabilitar.
+ * @param[in] lcd_i2c  Ponteiro para a instância de I2C-LCD info.
+ * @param[in] habilita True para habilitar, false para desabilitar.
  * @return ESP_OK se bem sucedido, caso contrário, uma constante de erro.
  */
-esp_err_t lcd_i2c_backlight(lcd_i2c_t* lcd_i2c, bool enable);
+esp_err_t lcd_i2c_backlight(lcd_i2c_t* lcd_i2c, bool habilita);
 
 /**
  * @brief Ativa ou desativa a exibição.
  * Quando desabilitada, a luz de fundo não é afetada, mas nenhum conteúdo
  * da DDRAM é exibido, nem o cursor. O display estará "em branco".
  * A reativação da exibição não afeta o conteúdo da DDRAM ou o estado ou posição do cursor.
- * @param[in] lcd_i2c Ponteiro para a instância de I2C-LCD info.
- * @param[in] enable True para habilitar, false para desabilitar.
+ * @param[in] lcd_i2c  Ponteiro para a instância de I2C-LCD info.
+ * @param[in] habilita True para habilitar, false para desabilitar.
  * @return ESP_OK se bem sucedido, caso contrário, uma constante de erro.
  */
-esp_err_t lcd_i2c_habilita_display(lcd_i2c_t* lcd_i2c, bool enable);
+esp_err_t lcd_i2c_habilita_display(lcd_i2c_t* lcd_i2c, bool habilita);
 
 /**
  * @brief Habilita ou desabilita a exibição do cursor sublinhado.
  * Se ativado, indica visualmente onde o próximo caractere escrito no display aparecerá.
  * Pode ser habilitado junto com o cursor piscando.
- * @param[in] lcd_i2c Ponteiro para a instância de I2C-LCD info.
- * @param[in] enable True para habilitar, false para desabilitar.
+ * @param[in] lcd_i2c  Ponteiro para a instância de I2C-LCD info.
+ * @param[in] habilita True para habilitar, false para desabilitar.
  * @return ESP_OK se bem sucedido, caso contrário, uma constante de erro.
  */
-esp_err_t lcd_i2c_config_cursor(lcd_i2c_t* lcd_i2c, bool enable);
+esp_err_t lcd_i2c_config_cursor(lcd_i2c_t* lcd_i2c, bool habilita);
 
 /**
  * @brief Ativa ou desativa a exibição do cursor de bloco piscante.
  * Se ativado, indica visualmente onde o próximo caractere escrito no display aparecerá.
  * Pode ser habilitado junto com o cursor sublinhado.
- * @param[in] lcd_i2c Ponteiro para a instância de I2C-LCD info.
- * @param[in] enable True para habilitar, false para desabilitar.
+ * @param[in] lcd_i2c  Ponteiro para a instância de I2C-LCD info.
+ * @param[in] habilita True para habilitar, false para desabilitar.
  * @return ESP_OK se bem sucedido, caso contrário, uma constante de erro.
  */
-esp_err_t lcd_i2c_config_cursor_piscante(lcd_i2c_t* lcd_i2c, bool enable);
+esp_err_t lcd_i2c_config_cursor_piscante(lcd_i2c_t* lcd_i2c, bool habilita);
 
 /**
  *
@@ -183,11 +183,11 @@ esp_err_t lcd_i2c_direita_para_esquerda(lcd_i2c_t* lcd_i2c);
  * O texto da esquerda para a direita aparecerá justificado à direita da posição do cursor.
  * Quando desativado, o display não rolará e o cursor se moverá na tela.
  * O texto da direita para a esquerda aparecerá justificado à esquerda da posição do cursor.
- * @param[in] lcd_i2c Ponteiro para a instância de I2C-LCD info.
- * @param[in] enable True para habilitar, false para desabilitar.
+ * @param[in] lcd_i2c  Ponteiro para a instância de I2C-LCD info.
+ * @param[in] habilita True para habilitar, false para desabilitar.
  * @return ESP_OK se bem sucedido, caso contrário, uma constante de erro.
  */
-esp_err_t lcd_i2c_rolagem_automatica(lcd_i2c_t* lcd_i2c, bool enable);
+esp_err_t lcd_i2c_rolagem_automatica(lcd_i2c_t* lcd_i2c, bool habilita);
 
 /**
  * @brief Rola o display uma posição para a esquerda.

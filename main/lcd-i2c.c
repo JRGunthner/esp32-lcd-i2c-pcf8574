@@ -11,13 +11,13 @@
 #define TAG "LCD_I2C"
 
 // Delays (em ms)
-#define DELAY_POWER_ON               50000  // espera ao menos 40us após VCC subir para 2,7V
-#define DELAY_INIT_1                 4500   // espera ao menos 4,1ms (fig 24, pg 46)
-#define DELAY_INIT_2                 4500   // espera ao menos 4,1ms (fig 24, pg 46)
-#define DELAY_INIT_3                 120    // espera ao menos 100us (fig 24, pg 46)
+#define DELAY_POWER_ON 50000 // espera ao menos 40us após VCC subir para 2,7V
+#define DELAY_INIT_1   4500  // espera ao menos 4,1ms (fig 24, pg 46)
+#define DELAY_INIT_2   4500  // espera ao menos 4,1ms (fig 24, pg 46)
+#define DELAY_INIT_3   120   // espera ao menos 100us (fig 24, pg 46)
 
-#define DELAY_LIMPAR_DISPLAY         2000
-#define DELAY_RETORNA_INICIO         2000
+#define DELAY_LIMPAR_DISPLAY 2000
+#define DELAY_RETORNA_INICIO 2000
 
 #define DELAY_HABILITA_LARGURA_PULSO 1   // o pulso de ativação deve ter pelo menos 450ns de largura
 #define DELAY_HABILITA_AJUSTE_PULSO  50  // o comando requer > 37us para resolver (tabela 6 no datasheet)
@@ -193,87 +193,75 @@ esp_err_t lcd_i2c_init(lcd_i2c_t* lcd_i2c, smbus_t* smbus, bool backlight, uint8
 }
 
 esp_err_t lcd_i2c_init_config(const lcd_i2c_t* lcd_i2c) {
-    esp_err_t first_err = ESP_OK;
-    esp_err_t last_err = ESP_FAIL;
+    esp_err_t status_anterior = ESP_OK;
+    esp_err_t status_atual    = ESP_FAIL;
 
     // Liga o LCD através do PCF8574 - pinos RS e RW em 0
-    if ((last_err = lcd_i2c_pcf8574_enviar(lcd_i2c, 0)) != ESP_OK) {
-        if (first_err == ESP_OK)
-            first_err = last_err;
-        ESP_LOGE(TAG, "reset: lcd_i2c_pcf8574_enviar 1 falhou: %d", last_err);
+    status_atual = lcd_i2c_pcf8574_enviar(lcd_i2c, 0);
+    if (status_atual != ESP_OK) {
+        if (status_anterior == ESP_OK)
+            status_anterior = status_atual;
+        ESP_LOGE(TAG, "reset: lcd_i2c_pcf8574_enviar 1 falhou: %d", status_atual);
     }
     ets_delay_us(1000);
 
+    const uint16_t DELAY_INIT[3] = {DELAY_INIT_1, DELAY_INIT_2, DELAY_INIT_3};
+
     // Seleciona modo de 8 bits (pg 46, fig 24)
-    // TODO: fazer um for para repetir 3 vezes
-    if ((last_err = lcd_i2c_pcf8574_enviar_nibble(lcd_i2c, 0x03 << 4)) != ESP_OK) {
-        if (first_err == ESP_OK)
-            first_err = last_err;
-        ESP_LOGE(TAG, "reset: lcd_i2c_pcf8574_enviar_nibble 1 falhou: %d", last_err);
+    for (uint8_t i = 0; i < 3; i++) {
+        status_atual = lcd_i2c_pcf8574_enviar_nibble(lcd_i2c, 0x03 << 4);
+        if (status_atual != ESP_OK) {
+            if (status_anterior == ESP_OK)
+                status_anterior = status_atual;
+            ESP_LOGE(TAG, "reset: lcd_i2c_pcf8574_enviar_nibble %d falhou: %d", (i + 1), status_atual);
+        }
+        ets_delay_us(DELAY_INIT[i]);
     }
-    ets_delay_us(DELAY_INIT_1);
-
-    // Repete comando anterior
-    if ((last_err = lcd_i2c_pcf8574_enviar_nibble(lcd_i2c, 0x03 << 4)) != ESP_OK) {
-        if (first_err == ESP_OK)
-            first_err = last_err;
-        ESP_LOGE(TAG, "reset: lcd_i2c_pcf8574_enviar_nibble 2 failed: %d", last_err);
-    }
-    ets_delay_us(DELAY_INIT_2);
-
-    // repete comando anterior
-    if ((last_err = lcd_i2c_pcf8574_enviar_nibble(lcd_i2c, 0x03 << 4)) != ESP_OK) {
-        if (first_err == ESP_OK)
-            first_err = last_err;
-        ESP_LOGE(TAG, "reset: lcd_i2c_pcf8574_enviar_nibble 3 failed: %d", last_err);
-    }
-    ets_delay_us(DELAY_INIT_3);
 
     // Seleciona modo de 4 bits
-    if ((last_err = lcd_i2c_pcf8574_enviar_nibble(lcd_i2c, 0x02 << 4)) != ESP_OK) {
-        if (first_err == ESP_OK)
-            first_err = last_err;
-        ESP_LOGE(TAG, "reset: lcd_i2c_pcf8574_enviar_nibble 4 failed: %d", last_err);
+    status_atual = lcd_i2c_pcf8574_enviar_nibble(lcd_i2c, 0x02 << 4);
+    if (status_atual != ESP_OK) {
+        if (status_anterior == ESP_OK)
+            status_anterior = status_atual;
+        ESP_LOGE(TAG, "reset: lcd_i2c_pcf8574_enviar_nibble 4 failed: %d", status_atual);
     }
 
-    // Agora já podemos usar as funções command()/write()
-
-    last_err = lcd_i2c_enviar_cmd(lcd_i2c, CMD_CONFIGURAR | FLAG_MODO_4BIT | FLAG_2_LINHAS | FLAG_DOTS_5X8);
-    if (last_err != ESP_OK) {
-        if (first_err == ESP_OK)
-            first_err = last_err;
-        ESP_LOGE(TAG, "reset: lcd_i2c_enviar_cmd 1 falhou: %d", last_err);
+    status_atual = lcd_i2c_enviar_cmd(lcd_i2c, CMD_CONFIGURAR | FLAG_MODO_4BIT | FLAG_2_LINHAS | FLAG_DOTS_5X8);
+    if (status_atual != ESP_OK) {
+        if (status_anterior == ESP_OK)
+            status_anterior = status_atual;
+        ESP_LOGE(TAG, "reset: lcd_i2c_enviar_cmd 1 falhou: %d", status_atual);
     }
 
-    last_err = lcd_i2c_enviar_cmd(lcd_i2c, CMD_CONTROLE_DISPLAY | lcd_i2c->display_ctrl);
-    if (last_err != ESP_OK) {
-        if (first_err == ESP_OK)
-            first_err = last_err;
-        ESP_LOGE(TAG, "reset: lcd_i2c_enviar_cmd 2 falhou: %d", last_err);
+    status_atual = lcd_i2c_enviar_cmd(lcd_i2c, CMD_CONTROLE_DISPLAY | lcd_i2c->display_ctrl);
+    if (status_atual != ESP_OK) {
+        if (status_anterior == ESP_OK)
+            status_anterior = status_atual;
+        ESP_LOGE(TAG, "reset: lcd_i2c_enviar_cmd 2 falhou: %d", status_atual);
     }
 
-    last_err = lcd_i2c_limpar_display(lcd_i2c);
-    if (last_err != ESP_OK) {
-        if (first_err == ESP_OK)
-            first_err = last_err;
-        ESP_LOGE(TAG, "reset: lcd_i2c_limpar_display falhou: %d", last_err);
+    status_atual = lcd_i2c_limpar_display(lcd_i2c);
+    if (status_atual != ESP_OK) {
+        if (status_anterior == ESP_OK)
+            status_anterior = status_atual;
+        ESP_LOGE(TAG, "reset: lcd_i2c_limpar_display falhou: %d", status_atual);
     }
 
-    last_err = lcd_i2c_enviar_cmd(lcd_i2c, CMD_MODO_CONFIG | lcd_i2c->modo_entrada);
-    if (last_err != ESP_OK) {
-        if (first_err == ESP_OK)
-            first_err = last_err;
-        ESP_LOGE(TAG, "reset: lcd_i2c_enviar_cmd 3 falhou: %d", last_err);
+    status_atual = lcd_i2c_enviar_cmd(lcd_i2c, CMD_MODO_CONFIG | lcd_i2c->modo_entrada);
+    if (status_atual != ESP_OK) {
+        if (status_anterior == ESP_OK)
+            status_anterior = status_atual;
+        ESP_LOGE(TAG, "reset: lcd_i2c_enviar_cmd 3 falhou: %d", status_atual);
     }
 
-    last_err = lcd_i2c_retornar_inicio(lcd_i2c);
-    if (last_err != ESP_OK) {
-        if (first_err == ESP_OK)
-            first_err = last_err;
-        ESP_LOGE(TAG, "reset: lcd_i2c_retornar_inicio failed: %d", last_err);
+    status_atual = lcd_i2c_retornar_inicio(lcd_i2c);
+    if (status_atual != ESP_OK) {
+        if (status_anterior == ESP_OK)
+            status_anterior = status_atual;
+        ESP_LOGE(TAG, "reset: lcd_i2c_retornar_inicio failed: %d", status_atual);
     }
 
-    return first_err;
+    return status_anterior;
 }
 
 esp_err_t lcd_i2c_limpar_display(const lcd_i2c_t* lcd_i2c) {
@@ -309,37 +297,37 @@ esp_err_t lcd_i2c_mover_cursor(const lcd_i2c_t* lcd_i2c, uint8_t linha, uint8_t 
     return ret;
 }
 
-esp_err_t lcd_i2c_backlight(lcd_i2c_t* lcd_i2c, bool enable) {
+esp_err_t lcd_i2c_backlight(lcd_i2c_t* lcd_i2c, bool habilita) {
     esp_err_t ret = ESP_FAIL;
     if (lcd_i2c_confirmar_init(lcd_i2c)) {
-        lcd_i2c->backlight = lcd_i2c_config_flag(lcd_i2c->backlight, enable, FLAG_BACKLIGHT_LIGA);
+        lcd_i2c->backlight = lcd_i2c_config_flag(lcd_i2c->backlight, habilita, FLAG_BACKLIGHT_LIGA);
         ret = lcd_i2c_pcf8574_enviar(lcd_i2c, 0);
     }
     return ret;
 }
 
-esp_err_t lcd_i2c_habilita_display(lcd_i2c_t* lcd_i2c, bool enable) {
+esp_err_t lcd_i2c_habilita_display(lcd_i2c_t* lcd_i2c, bool habilita) {
     esp_err_t ret = ESP_FAIL;
     if (lcd_i2c_confirmar_init(lcd_i2c)) {
-        lcd_i2c->display_ctrl = lcd_i2c_config_flag(lcd_i2c->display_ctrl, enable, FLAG_DISPLAY_ON);
+        lcd_i2c->display_ctrl = lcd_i2c_config_flag(lcd_i2c->display_ctrl, habilita, FLAG_DISPLAY_ON);
         ret = lcd_i2c_enviar_cmd(lcd_i2c, CMD_CONTROLE_DISPLAY | lcd_i2c->display_ctrl);
     }
     return ret;
 }
 
-esp_err_t lcd_i2c_config_cursor(lcd_i2c_t* lcd_i2c, bool enable) {
+esp_err_t lcd_i2c_config_cursor(lcd_i2c_t* lcd_i2c, bool habilita) {
     esp_err_t ret = ESP_FAIL;
     if (lcd_i2c_confirmar_init(lcd_i2c)) {
-        lcd_i2c->display_ctrl = lcd_i2c_config_flag(lcd_i2c->display_ctrl, enable, FLAG_CURSOR_ON);
+        lcd_i2c->display_ctrl = lcd_i2c_config_flag(lcd_i2c->display_ctrl, habilita, FLAG_CURSOR_ON);
         ret = lcd_i2c_enviar_cmd(lcd_i2c, CMD_CONTROLE_DISPLAY | lcd_i2c->display_ctrl);
     }
     return ret;
 }
 
-esp_err_t lcd_i2c_config_cursor_piscante(lcd_i2c_t* lcd_i2c, bool enable) {
+esp_err_t lcd_i2c_config_cursor_piscante(lcd_i2c_t* lcd_i2c, bool habilita) {
     esp_err_t ret = ESP_FAIL;
     if (lcd_i2c_confirmar_init(lcd_i2c)) {
-        lcd_i2c->display_ctrl = lcd_i2c_config_flag(lcd_i2c->display_ctrl, enable, FLAG_BLINK_ON);
+        lcd_i2c->display_ctrl = lcd_i2c_config_flag(lcd_i2c->display_ctrl, habilita, FLAG_BLINK_ON);
         ret = lcd_i2c_enviar_cmd(lcd_i2c, CMD_CONTROLE_DISPLAY | lcd_i2c->display_ctrl);
     }
     return ret;
@@ -363,10 +351,10 @@ esp_err_t lcd_i2c_direita_para_esquerda(lcd_i2c_t* lcd_i2c) {
     return ret;
 }
 
-esp_err_t lcd_i2c_rolagem_automatica(lcd_i2c_t* lcd_i2c, bool enable) {
+esp_err_t lcd_i2c_rolagem_automatica(lcd_i2c_t* lcd_i2c, bool habilita) {
     esp_err_t ret = ESP_FAIL;
     if (lcd_i2c_confirmar_init(lcd_i2c)) {
-        lcd_i2c->modo_entrada = lcd_i2c_config_flag(lcd_i2c->modo_entrada, enable, FLAG_SHIFT_ON);
+        lcd_i2c->modo_entrada = lcd_i2c_config_flag(lcd_i2c->modo_entrada, habilita, FLAG_SHIFT_ON);
         ret = lcd_i2c_enviar_cmd(lcd_i2c, CMD_MODO_CONFIG | lcd_i2c->modo_entrada);
     }
     return ret;
