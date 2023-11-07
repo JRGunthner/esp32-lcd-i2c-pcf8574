@@ -46,6 +46,7 @@
         "xmemory": "c",
         "ios": "c",
         "smbus.h": "c",
-        "uart.h": "c"
+        "uart.h": "c",
+        "esp_system.h": "c"
     }
 }

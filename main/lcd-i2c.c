@@ -5,13 +5,14 @@
 #include "freertos/task.h"
 #include "esp_system.h"
 #include "esp_log.h"
+#include "rom/ets_sys.h"
 
 #include "smbus.h"
 #include "lcd-i2c.h"
 
 #define TAG "LCD_I2C"
 
-// Delays (em ms)
+// Delays (em us)
 #define DELAY_POWER_ON               50000  // espera ao menos 40us após VCC subir para 2,7V
 #define DELAY_INIT_1                 4500   // espera ao menos 4,1ms (fig 24, pg 46)
 #define DELAY_INIT_2                 4500   // espera ao menos 4,1ms (fig 24, pg 46)

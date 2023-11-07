@@ -20,13 +20,13 @@ static uint8_t aguardar_uart_rx(void) {
 
 #ifdef USE_STDIN
     while (!c) {
-        STATUS s = uart_rx_one_char(&c);
-        if (s == OK)
+        ETS_STATUS s = uart_rx_one_char(&c);
+        if (s == ETS_OK)
             printf("%c", c);
         vTaskDelay(1);
     }
 #else
-    vTaskDelay(1000 / portTICK_RATE_MS);
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
 #endif  // USE_STDIN
     return c;
 }
@@ -41,7 +41,7 @@ void vLcdTask(void* pvParameter) {
         lcd_printf("pro chimarrao!");
         lcd_cursor(3, 8);
         lcd_printf("Tche!");
-        vTaskDelay(10 / portTICK_RATE_MS);
+        vTaskDelay(10 / portTICK_PERIOD_MS);
     }
     vTaskDelete(NULL);
 }

@@ -9,7 +9,7 @@
 extern "C" {
 #endif
 
-#define SMBUS_TIMEOUT (1000 / portTICK_RATE_MS)
+#define SMBUS_TIMEOUT (1000 / portTICK_PERIOD_MS)
 
 // Endereço do dispositivo escravo de 7 ou 10 bits.
 typedef uint16_t i2c_address_t;

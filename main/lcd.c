@@ -60,7 +60,7 @@ void lcd_init(void) {
     // Inicializa SMBus
     smbus_t* smbus = smbus_malloc();
     ESP_ERROR_CHECK(smbus_init(smbus, i2c_num, address));
-    ESP_ERROR_CHECK(smbus_set_timeout(smbus, 1000 / portTICK_RATE_MS));
+    ESP_ERROR_CHECK(smbus_set_timeout(smbus, 1000 / portTICK_PERIOD_MS));
 
     // Inicializa o LCD com backlight desligado
     ESP_ERROR_CHECK(lcd_i2c_init(lcd_info, smbus, true, LCD_NUM_LINHAS, LCD_NUM_CELULAS, LCD_NUM_COLUNAS));
@@ -68,7 +68,7 @@ void lcd_init(void) {
 }
 
 static void aguardar_uart_rx(void) {
-    vTaskDelay(1000 / portTICK_RATE_MS);
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
 }
 
 void lcd_cursor(uint8_t linha, uint8_t coluna) {
@@ -118,14 +118,14 @@ void lcd_reset(void) {
 void lcd_rolagem_esquerda(uint8_t casas, uint16_t transicao) {
     for (int i = 0; i < casas; ++i) {
         lcd_i2c_rolagem_esquerda(lcd_info);
-        vTaskDelay(transicao / portTICK_RATE_MS);
+        vTaskDelay(transicao / portTICK_PERIOD_MS);
     }
 }
 
 void lcd_rolagem_direita(uint8_t casas, uint16_t transicao) {
     for (int i = 0; i < casas; ++i) {
         lcd_i2c_rolagem_direita(lcd_info);
-        vTaskDelay(transicao / portTICK_RATE_MS);
+        vTaskDelay(transicao / portTICK_PERIOD_MS);
     }
 }
 
@@ -237,7 +237,7 @@ void lcd_teste(void) {
     aguardar_uart_rx();
     for (int i = 0; i < 8; ++i) {
         lcd_i2c_rolagem_esquerda(lcd_info);
-        vTaskDelay(200 / portTICK_RATE_MS);
+        vTaskDelay(200 / portTICK_PERIOD_MS);
     }
 
     ESP_LOGI(TAG, "Rola o display para direita, 8 casas, imediatamente");
@@ -268,7 +268,7 @@ void lcd_teste(void) {
     lcd_i2c_rolagem_automatica(lcd_info, true);
     for (int i = 0; i < 5; ++i) {
         lcd_i2c_print_char(lcd_info, '>');
-        vTaskDelay(200 / portTICK_RATE_MS);
+        vTaskDelay(200 / portTICK_PERIOD_MS);
     }
 
     ESP_LOGI(TAG, "Muda endereco do contador para decrementar (escreve da direita para esquerda) e escreve '<<<<<'");
@@ -276,7 +276,7 @@ void lcd_teste(void) {
     lcd_i2c_direita_para_esquerda(lcd_info);
     for (int i = 0; i < 5; ++i) {
         lcd_i2c_print_char(lcd_info, '<');
-        vTaskDelay(200 / portTICK_RATE_MS);
+        vTaskDelay(200 / portTICK_PERIOD_MS);
     }
 
     ESP_LOGI(TAG, "Desabilita auto-scroll e esceve '+++++'");
@@ -284,7 +284,7 @@ void lcd_teste(void) {
     lcd_i2c_rolagem_automatica(lcd_info, false);
     for (int i = 0; i < 5; ++i) {
         lcd_i2c_print_char(lcd_info, '+');
-        vTaskDelay(200 / portTICK_RATE_MS);
+        vTaskDelay(200 / portTICK_PERIOD_MS);
     }
 
     ESP_LOGI(TAG, "Ajusta escrita de esquerda para direita e escreve '>>>>>'");
@@ -292,7 +292,7 @@ void lcd_teste(void) {
     lcd_i2c_esquerda_para_direita(lcd_info);
     for (int i = 0; i < 5; ++i) {
         lcd_i2c_print_char(lcd_info, '>');
-        vTaskDelay(200 / portTICK_RATE_MS);
+        vTaskDelay(200 / portTICK_PERIOD_MS);
     }
 
     ESP_LOGI(TAG, "Limpa display e desabilita cursor");
@@ -357,7 +357,7 @@ void lcd_teste(void) {
     uint8_t linha = 0;
     while (1) {
         lcd_i2c_print_char(lcd_info, c);
-        vTaskDelay(100 / portTICK_RATE_MS);
+        vTaskDelay(100 / portTICK_PERIOD_MS);
         ESP_LOGD(TAG, "coluna %d, linha %d, char 0x%02x", coluna, linha, c);
         ++c;
         ++coluna;
