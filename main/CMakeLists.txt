@@ -1,4 +1,4 @@
 idf_component_register(
-    SRCS "app_main.c" "lcd-i2c.c" "smbus.c"
+    SRCS "lcd.c" "app_main.c" "lcd-i2c.c" "smbus.c" "lcd.c"
     INCLUDE_DIRS "."
 )

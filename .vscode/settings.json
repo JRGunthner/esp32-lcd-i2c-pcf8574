@@ -44,6 +44,8 @@
         "i2c.h": "c",
         "coroutine": "c",
         "xmemory": "c",
-        "ios": "c"
+        "ios": "c",
+        "smbus.h": "c",
+        "uart.h": "c"
     }
 }

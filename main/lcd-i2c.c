@@ -6,18 +6,19 @@
 #include "esp_system.h"
 #include "esp_log.h"
 
+#include "smbus.h"
 #include "lcd-i2c.h"
 
 #define TAG "LCD_I2C"
 
 // Delays (em ms)
-#define DELAY_POWER_ON 50000 // espera ao menos 40us após VCC subir para 2,7V
-#define DELAY_INIT_1   4500  // espera ao menos 4,1ms (fig 24, pg 46)
-#define DELAY_INIT_2   4500  // espera ao menos 4,1ms (fig 24, pg 46)
-#define DELAY_INIT_3   120   // espera ao menos 100us (fig 24, pg 46)
+#define DELAY_POWER_ON               50000  // espera ao menos 40us após VCC subir para 2,7V
+#define DELAY_INIT_1                 4500   // espera ao menos 4,1ms (fig 24, pg 46)
+#define DELAY_INIT_2                 4500   // espera ao menos 4,1ms (fig 24, pg 46)
+#define DELAY_INIT_3                 120    // espera ao menos 100us (fig 24, pg 46)
 
-#define DELAY_LIMPAR_DISPLAY 2000
-#define DELAY_RETORNA_INICIO 2000
+#define DELAY_LIMPAR_DISPLAY         2000
+#define DELAY_RETORNA_INICIO         2000
 
 #define DELAY_HABILITA_LARGURA_PULSO 1   // o pulso de ativação deve ter pelo menos 450ns de largura
 #define DELAY_HABILITA_AJUSTE_PULSO  50  // o comando requer > 37us para resolver (tabela 6 no datasheet)
@@ -71,17 +72,17 @@
 
 // Verifica inicialização
 static bool lcd_i2c_confirmar_init(const lcd_i2c_t* lcd_i2c) {
-    bool ok = false;
+    bool ret = false;
     if (lcd_i2c != NULL) {
         if (lcd_i2c->init) {
-            ok = true;
+            ret = true;
         } else {
             ESP_LOGE(TAG, "lcd_i2c nao foi inicializado");
         }
     } else {
         ESP_LOGE(TAG, "lcd_i2c=NULL");
     }
-    return ok;
+    return ret;
 }
 
 // Define ou limpa a flag especificada dependendo da condição
@@ -194,7 +195,7 @@ esp_err_t lcd_i2c_init(lcd_i2c_t* lcd_i2c, smbus_t* smbus, bool backlight, uint8
 
 esp_err_t lcd_i2c_init_config(const lcd_i2c_t* lcd_i2c) {
     esp_err_t status_anterior = ESP_OK;
-    esp_err_t status_atual    = ESP_FAIL;
+    esp_err_t status_atual = ESP_FAIL;
 
     // Liga o LCD através do PCF8574 - pinos RS e RW em 0
     status_atual = lcd_i2c_pcf8574_enviar(lcd_i2c, 0);
